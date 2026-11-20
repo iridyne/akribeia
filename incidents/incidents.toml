@@ -1,0 +1,25 @@
+# Real failures, localized. Evidence is a trace excerpt or a first-hand correction; not a benchmark.
+
+[[incident]]
+id = "INC-0001"
+date = "2026-11-20"
+title = "Three consecutive turns ended on raw probe output without a conclusion"
+edge = "model-owner"
+fault = "model"
+mode = "satisficing"
+earliest_unrecoverable = "The model treated the tool result as the deliverable and yielded instead of synthesizing a conclusion."
+intervention = ["M-002", "M-003"]
+evidence = "First-hand reflection after three turns; the reply bodies contained raw probe output and no conclusion."
+notes = "Harness contribution: RULES.md covered evidence thresholds but not turn closure. The fix is a closure contract delivered to main and subagents."
+
+[[incident]]
+id = "INC-0002"
+date = "2026-11-20"
+title = "Eval open() used repeatedly to read root-only remote environment files"
+edge = "model-tool"
+fault = "model"
+mode = "incorrect tool selection"
+earliest_unrecoverable = "The read tool could not access a root 700 path, and no sanctioned escalation path existed; the model reached for eval Python open()."
+intervention = ["M-001"]
+evidence = "First-hand reflection; the targets were root-only files under /etc, and the read tool was denied."
+notes = "Surface fault is model-side tool selection; root cause is a harness capability gap. A prohibition without an alternative invites a workaround. The guardrail also fired after the call, not before it."

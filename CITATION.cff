@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "PCH — Proof-Carrying Harness"
+message: "If you use this work, cite it as below."
+type: software
+license: MIT
+repository-code: "https://github.com/iridyne/proof-carrying-harness"
+url: "https://github.com/iridyne/proof-carrying-harness"
+authors:
+  - name: "Iridyne"
+abstract: "An evidence-gated research loop for agent harness engineering: every configuration change maps to a claim, every hypothesis has a falsifier, and every real failure is localized before it is repaired."

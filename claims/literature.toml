@@ -1,0 +1,161 @@
+# External claims. Status is what the cited work actually established, not what we hope it implies.
+
+[[claim]]
+id = "LIT-001"
+statement = "An agent harness is a runtime layer with four necessary elements: an adaptive loop, a tool interface that alters an environment, active context management, and at least one control mechanism independent of model obedience."
+status = "supported"
+confidence = "high"
+source = "Macedo 2026, What makes a harness a harness"
+url = "https://arxiv.org/abs/2606.10106"
+scope = "definition; conceptual analysis, not an empirical benchmark"
+notes = "Binary membership, gradual quality. Guardrails are part of the control element, not a separate concept."
+
+[[claim]]
+id = "LIT-002"
+statement = "Long-horizon agent performance can be organized as a function of reasoning, memory, context construction, skill routing, orchestration, and verification/governance."
+status = "conceptual"
+confidence = "medium"
+source = "Gu 2026, From Model Scaling to System Scaling"
+url = "https://arxiv.org/abs/2605.26112"
+scope = "framework; the authors state it is not a quantitative model"
+notes = "Use as an intervention map, not as an equation. Factors are not orthogonal."
+
+[[claim]]
+id = "LIT-003"
+statement = "Redesigning the agent-computer interface alone, with the model fixed, can substantially change benchmark accuracy."
+status = "supported"
+confidence = "high"
+source = "Yang et al. 2024, SWE-agent"
+url = "https://arxiv.org/abs/2405.15793"
+scope = "SWE-bench; tool schema and action format"
+notes = "The strongest evidence that the harness is a causal lever, not glue."
+
+[[claim]]
+id = "LIT-004"
+statement = "After a model is competently tuned for agency, additional hand-built scaffolding produced modest, non-significant gains in one 195-task study (30% to 38%, 95% CI)."
+status = "supported"
+confidence = "medium"
+source = "METR 2024, Measuring the impact of post-training enhancements"
+url = "https://metr.org/blog/2024-03-15-measuring-post-impact-enhancements/"
+scope = "GPT-4 era, 195 tasks, 500k token budget; single study"
+notes = "Post-training moved the same basic scaffold from 5% to 30%. Do not generalize the +8pp number to frontier models."
+
+[[claim]]
+id = "LIT-005"
+statement = "Plausible prompting and scaffolding changes can make the same model perform noticeably worse."
+status = "supported"
+confidence = "medium"
+source = "METR 2024, Measuring the impact of post-training enhancements"
+url = "https://metr.org/blog/2024-03-15-measuring-post-impact-enhancements/"
+scope = "same task set; LangChain ReAct and AutoGPT underperformed the authors' basic scaffold"
+notes = "The variance of scaffold changes is high. Every change needs a regression check."
+
+[[claim]]
+id = "LIT-006"
+statement = "A simple three-phase agentless pipeline can outperform more complex agents on SWE-bench Lite at lower cost."
+status = "supported"
+confidence = "medium"
+source = "Xia et al. 2024, Agentless"
+url = "https://arxiv.org/abs/2407.01489"
+scope = "SWE-bench Lite; 2024 baselines"
+notes = "Complexity is not automatically better. Treat as a counterweight to additive harness design."
+
+[[claim]]
+id = "LIT-007"
+statement = "Agent failures are best localized to an interaction edge plus a fault side, using the earliest unrecoverable failure rather than the terminal symptom."
+status = "supported"
+confidence = "medium"
+source = "Raj et al. 2026, Model or Harness?"
+url = "https://arxiv.org/abs/2607.28802"
+scope = "41 failure modes; validated with agent judges at Cohen's kappa 0.76 against human labels"
+notes = "The taxonomy distinguishes model-side, harness-side, environment-side, and grader-side repairs."
+
+[[claim]]
+id = "LIT-008"
+statement = "Multi-agent LLM failures cluster into specification issues, inter-agent misalignment, and task verification; prompt-level patches often do not fix them."
+status = "supported"
+confidence = "high"
+source = "Cemri et al. 2025, Why Do Multi-Agent LLM Systems Fail?"
+url = "https://arxiv.org/abs/2503.13657"
+scope = "1600+ traces across 7 frameworks; 14 failure modes"
+notes = "Premature termination and weak verification are common. Relevant to the closure rule and subagent briefs."
+
+[[claim]]
+id = "LIT-009"
+statement = "Harness policy can be represented as executable natural-language documents that a shared runtime interprets; such harnesses match code/prompt realizations on benchmark tasks and are analyzable by module ablation."
+status = "supported"
+confidence = "medium"
+source = "Pan et al. 2026, Natural-Language Agent Harnesses"
+url = "https://arxiv.org/abs/2603.25723"
+scope = "coding, terminal-use, and computer-use benchmarks"
+notes = "Justifies treating rules as first-class harness modules and testing them by ablation."
+
+[[claim]]
+id = "LIT-010"
+statement = "Self-improvement can be formalized as a self-induced update operator on scaffold components (prompt, memory, tools, control), driven by execution, constraint, or exploratory signals."
+status = "conceptual"
+confidence = "high"
+source = "Ren et al. 2026, Self-Improvements in Modern Agentic Systems"
+url = "https://arxiv.org/abs/2607.13104"
+scope = "survey framework"
+notes = "This repository implements scaffold updates only, with a human acceptance gate."
+
+[[claim]]
+id = "LIT-011"
+statement = "Long-horizon agent evaluation should include process metrics (context efficiency, memory hygiene, communication fidelity, verification cost), not only task success."
+status = "conceptual"
+confidence = "medium"
+source = "Gu 2026, From Model Scaling to System Scaling"
+url = "https://arxiv.org/abs/2605.26112"
+scope = "evaluation agenda"
+notes = "Grounds the metric table in docs/playground.md."
+
+[[claim]]
+id = "LIT-012"
+statement = "Persistent memory fails in a stale-but-confident mode; trust should be re-established at retrieval against the live environment."
+status = "conceptual"
+confidence = "medium"
+source = "Gu 2026, From Model Scaling to System Scaling"
+url = "https://arxiv.org/abs/2605.26112"
+scope = "argument grounded in memory and retrieval literature"
+notes = "Local implications: date-stamped facts, re-verify before acting, prefer live reads over cached notes."
+
+[[claim]]
+id = "LIT-013"
+statement = "Harness configuration varies across releases and runs and should be versioned as part of the system record for reproducibility and comparison."
+status = "conceptual"
+confidence = "high"
+source = "Towards Portable Specification of the Agent Harness"
+url = "https://arxiv.org/abs/2610.40917"
+scope = "specification proposal"
+notes = "Local implications: version rules, extensions, model roles, and the config snapshot with every result."
+
+[[claim]]
+id = "LIT-014"
+statement = "Longer context does not guarantee access to the relevant information; models attend unevenly across positions, with middle content often underused."
+status = "supported"
+confidence = "high"
+source = "Liu et al. 2024, Lost in the Middle"
+url = "https://arxiv.org/abs/2307.03172"
+scope = "long-context QA and retrieval tasks"
+notes = "Grounds context curation and the rule that critical constraints stay near the decision point."
+
+[[claim]]
+id = "LIT-015"
+statement = "Prompts and pipeline instructions can be optimized programmatically against a metric, but the result needs a held-out validation set and is vulnerable to overfitting."
+status = "supported"
+confidence = "medium"
+source = "Khattab et al. 2023, DSPy"
+url = "https://arxiv.org/abs/2310.03714"
+scope = "multi-stage LM pipelines with a task metric"
+notes = "Local implication: any automated rule optimization runs in the batch lane with a validation split, never directly on the live config."
+
+[[claim]]
+id = "LIT-016"
+statement = "Mixed-initiative interfaces work best when the human specifies goals and constraints, and the system infers when to act, confirm, or defer."
+status = "supported"
+confidence = "high"
+source = "Horvitz 1999, Principles of Mixed-Initiative User Interfaces"
+url = "https://doi.org/10.1145/302979.303030"
+scope = "HCI principles; pre-LLM but mechanism-level"
+notes = "Grounds the automation boundary: collect and draft automatically, accept changes through a PR."

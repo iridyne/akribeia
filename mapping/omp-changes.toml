@@ -1,0 +1,162 @@
+# Every intervention applied to the live OMP harness, mapped to claims.
+# status: justified (supported claim) | hypothesis (H-* with experiment) | decision (D-*) | unmapped (debt).
+
+[[change]]
+id = "M-001"
+date = "2026-11-20"
+target = "RULES.md:17"
+value = "Permission exception: when read is denied on a root-only path, state 'read unreachable', then use a minimal SSH read of the needed fields. Do not use eval open()/read_text()/readFileSync()."
+claims = ["H-002", "LIT-007"]
+status = "hypothesis"
+evidence = "EXP-0002"
+notes = "The rule names the legitimate path instead of repeating a prohibition."
+
+[[change]]
+id = "M-002"
+date = "2026-11-20"
+target = "RULES.md:32"
+value = "Result-to-conclusion: after a probe or command result, the first sentence is a conclusion; never end a turn on raw tool output."
+claims = ["H-001", "LIT-008"]
+status = "hypothesis"
+evidence = "EXP-0001"
+notes = "Addresses premature termination, a common multi-agent failure mode."
+
+[[change]]
+id = "M-003"
+date = "2026-11-20"
+target = "APPEND-SYSTEM-one-shot.md"
+value = "Four-line model-agnostic fragment with target: *; replaces the model-filtered cheap-models fragment."
+claims = ["H-001", "H-003", "LIT-009"]
+status = "hypothesis"
+evidence = "EXP-0001, EXP-0003"
+notes = "Delivered to main and subagents; verified by prompt assertions."
+
+[[change]]
+id = "M-004"
+date = "2026-11-15"
+target = "config.yml:task.prewalk"
+value = "false"
+claims = ["D-002", "LIT-004"]
+status = "decision"
+evidence = ""
+notes = "No stronger plan model is available; a handoff to a weaker model adds variance without evidence of gain."
+
+[[change]]
+id = "M-005"
+date = "2026-11-15"
+target = "config.yml:ttsr.judge"
+value = "off"
+claims = ["D-002"]
+status = "decision"
+evidence = ""
+notes = "No interactive judge."
+
+[[change]]
+id = "M-006"
+date = "2026-11-15"
+target = "config.yml:task.completionProbe"
+value = "false"
+claims = ["D-002"]
+status = "decision"
+evidence = ""
+notes = "No interactive judge; completion is checked by tests and the weekly review."
+
+[[change]]
+id = "M-007"
+date = "2026-11-15"
+target = "config.yml:security.enabled"
+value = "false"
+claims = ["D-002"]
+status = "decision"
+evidence = ""
+notes = "The security namespace is a resource surface, not a runtime guardrail; disabling it does not remove the deterministic guards."
+
+[[change]]
+id = "M-008"
+date = "2026-11-13"
+target = "extensions/isolation-nudge/index.ts:isWriter"
+value = "Writer regex includes task, sonic, hard-task."
+claims = ["H-007", "LIT-008"]
+status = "hypothesis"
+evidence = "EXP-0007"
+notes = "Upstream only covered task:*."
+
+[[change]]
+id = "M-009"
+date = "2026-11-13"
+target = "extensions/tool-policy-nag/index.ts"
+value = "Keep the native bash interceptor; actionable pty refusal text; run the risk lane before the interceptor skip."
+claims = ["H-008", "LIT-001"]
+status = "hypothesis"
+evidence = "EXP-0008"
+notes = "Defense in depth diverges from upstream's interceptor-off behavior."
+
+[[change]]
+id = "M-010"
+date = "2026-11-13"
+target = "extensions-last/system-prompt-replace/REPLACE-SYSTEM-default.yml"
+value = "Wording fixes for the ground-truth rerun and allocation passages; xd:// device regex tolerant of unquoted targets."
+claims = ["H-009", "LIT-003"]
+status = "hypothesis"
+evidence = "EXP-0009"
+notes = "Each rule targets one ambiguity; prompt assertions verify delivery."
+
+[[change]]
+id = "M-011"
+date = "2026-11-04"
+target = "extensions/mnemon"
+value = "Local long-term memory backend."
+claims = ["H-010", "LIT-010", "LIT-012"]
+status = "hypothesis"
+evidence = "EXP-0010"
+notes = "Cross-session memory; stale facts are replaced, not appended."
+
+[[change]]
+id = "M-012"
+date = "2026-11-13"
+target = "bin/verify-target.sh"
+value = "Resolve alias, path, URL, or owner/repo before acting; report the resolved value."
+claims = ["D-009", "LIT-001"]
+status = "decision"
+evidence = ""
+notes = "Deterministic identity gate for external actions."
+
+[[change]]
+id = "M-013"
+date = "2026-11-13"
+target = "bin/omp-config-status.sh"
+value = "Read-only diff of extensions, agents, personality, and config against the upstream reference."
+claims = ["D-010", "LIT-013"]
+status = "decision"
+evidence = ""
+notes = "Harness versioning and drift detection."
+
+[[change]]
+id = "M-014"
+date = "2026-11-15"
+target = "docs/network-facts.md"
+value = "Volatile network facts moved out of the rules and date-stamped."
+claims = ["D-011", "LIT-012"]
+status = "decision"
+evidence = ""
+notes = "Separates durable policy from facts that expire."
+
+[[change]]
+id = "M-015"
+date = "2026-11-20"
+target = "extensions/append-system-model/APPEND-SYSTEM-cheap-models.md"
+value = "Deleted; content merged into APPEND-SYSTEM-one-shot.md."
+claims = ["D-006", "LIT-009"]
+status = "decision"
+evidence = ""
+notes = "One rule, one place; removes duplicate delivery."
+
+[[change]]
+id = "M-016"
+date = "2026-11-20"
+target = "tests/prompt-assert.ts"
+value = "Ten delivery assertions, including the closure rule and the permission exception."
+claims = ["D-010", "LIT-013"]
+status = "decision"
+evidence = ""
+notes = "Proves the rules reach the provider payload; run after every rule change."

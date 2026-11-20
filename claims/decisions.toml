@@ -1,0 +1,111 @@
+# Operational decisions. These are constraints, not evidence. They are labeled so nobody mistakes them for findings.
+
+[[claim]]
+id = "D-001"
+statement = "Use a single active configuration. No profiles, no per-project config forks."
+status = "supported"
+confidence = "high"
+source = "owner decision"
+url = ""
+scope = "this deployment"
+notes = "Profiles multiply the harness record and make comparisons ambiguous."
+
+[[claim]]
+id = "D-002"
+statement = "No LLM judge in the interactive path. Deterministic checks handle runtime guardrails; LLM judges run only in the weekly batch."
+status = "supported"
+confidence = "high"
+source = "owner decision"
+url = ""
+scope = "this deployment"
+notes = "Motivated by latency, cost, and provider 403 risk. Tested by H-004."
+
+[[claim]]
+id = "D-003"
+statement = "The machine configuration is the source of truth. Upstream repositories are read-only references."
+status = "supported"
+confidence = "high"
+source = "owner decision"
+url = ""
+scope = "this deployment"
+notes = "Upstream updates are reviewed and absorbed manually, never applied wholesale."
+
+[[claim]]
+id = "D-004"
+statement = "Automated changes are proposed as pull requests. Nothing auto-merges."
+status = "supported"
+confidence = "high"
+source = "owner decision + LIT-016"
+url = "https://doi.org/10.1145/302979.303030"
+scope = "this deployment"
+notes = "The human owns acceptance; the system owns collection, labeling, and drafting."
+
+[[claim]]
+id = "D-005"
+statement = "The public repository contains no secrets, no raw prompts, no private hosts, and no home-directory paths."
+status = "supported"
+confidence = "high"
+source = "owner decision"
+url = ""
+scope = "this repository"
+notes = "Enforced by the secret scan in scripts/audit.py."
+
+[[claim]]
+id = "D-006"
+statement = "Prefer deletion over addition at equal evidence."
+status = "supported"
+confidence = "medium"
+source = "Ponytail heuristic"
+url = ""
+scope = "harness changes"
+notes = "A local heuristic, not a finding. Additive changes need stronger evidence because they add failure surface."
+
+[[claim]]
+id = "D-007"
+statement = "Express model-facing policy as natural-language documents first; use code only for checks that must be deterministic."
+status = "supported"
+confidence = "medium"
+source = "LIT-009"
+url = "https://arxiv.org/abs/2603.25723"
+scope = "this harness"
+notes = "Natural-language rules are inspectable, diffable, and ablatable."
+
+[[claim]]
+id = "D-008"
+statement = "One variable per experiment. Bundle changes only as exploratory work that cannot promote a claim."
+status = "supported"
+confidence = "high"
+source = "method decision"
+url = ""
+scope = "this repository"
+notes = "Prevents unfalsifiable success stories."
+
+[[claim]]
+id = "D-009"
+statement = "Verify target identity before any external or destructive action."
+status = "supported"
+confidence = "high"
+source = "owner decision + LIT-001"
+url = "https://arxiv.org/abs/2606.10106"
+scope = "remote commands, repository operations"
+notes = "Implemented by bin/verify-target.sh in the live configuration."
+
+[[claim]]
+id = "D-010"
+statement = "Version and diff the harness before changing it."
+status = "supported"
+confidence = "high"
+source = "owner decision + LIT-013"
+url = "https://arxiv.org/abs/2610.40917"
+scope = "this harness"
+notes = "Implemented by the local config status script and the prompt assertion probe."
+
+[[claim]]
+id = "D-011"
+statement = "Volatile facts are date-stamped and re-verified before acting; memory is treated as a hypothesis until checked."
+status = "supported"
+confidence = "medium"
+source = "LIT-012"
+url = "https://arxiv.org/abs/2605.26112"
+scope = "notes, network facts, environment facts"
+notes = "Mitigates stale-but-confident memory."
