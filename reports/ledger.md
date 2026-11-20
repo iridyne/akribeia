@@ -40,6 +40,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | H-008 | hypothesis | Keeping the native bash interceptor alongside the pty lane reduces routing violations without blocking legitimate commands. | EXP-0008 | False blocks rise above 2% of calls, or the interceptor catches nothing the pty lane misses in 30 days. |
 | H-009 | hypothesis | Wording-level prompt replacements that remove a specific ambiguity reduce the corresponding misread without side effects. | EXP-0009 | The misread persists at the same rate after the replacement, or a new misread appears in the same passage. |
 | H-010 | hypothesis | A local long-term memory improves recall-dependent tasks without polluting the working context. | EXP-0010 | Recall precision below 50%, or context tokens rise without a reduction in repeated questions. |
+| H-011 | hypothesis | A control-first gate before reporting headline metrics reduces premature conclusions in research sessions. | EXP-0013 | No reduction after 10 research reports, or the gate adds more than one turn to every report. |
 
 ## Decisions
 
@@ -94,6 +95,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | EXP-0010 | planned | H-010 | recall_precision, context_tokens_per_session, repeated_question_rate | Recall precision <50%, or context tokens rise without fewer repeated questions. |
 | EXP-0011 | planned | H-001 | premature_endings_per_100 | The on/off difference is smaller than the phase-to-phase variation, or the conclusion shape metric shows no change. |
 | EXP-0012 | planned | H-005 | judge_human_kappa, coverage, false_failure_rate | Kappa below 0.6, or the reviewer's flags miss more than 30% of human-flagged failures. |
+| EXP-0013 | planned | H-011 | premature_metric_conclusions_per_100 | No reduction, or the gate adds more than one turn to every report. |
 
 ## Incidents
 
@@ -101,3 +103,5 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 |---|---|---|---|---|
 | INC-0001 | model-owner | model | satisficing | M-002, M-003 |
 | INC-0002 | model-tool | model | incorrect tool selection | M-001 |
+| INC-0003 | model-owner | model | satisficing |  |
+| INC-0004 | model-tool | model | state-tracking failure |  |

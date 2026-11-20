@@ -23,3 +23,27 @@ earliest_unrecoverable = "The read tool could not access a root 700 path, and no
 intervention = ["M-001"]
 evidence = "First-hand reflection; the targets were root-only files under /etc, and the read tool was denied."
 notes = "Surface fault is model-side tool selection; root cause is a harness capability gap. A prohibition without an alternative invites a workaround. The guardrail also fired after the call, not before it."
+
+[[incident]]
+id = "INC-0003"
+date = "2026-11-20"
+title = "Headline metrics reported before the placebo control"
+edge = "model-owner"
+fault = "model"
+mode = "satisficing"
+earliest_unrecoverable = "The first summary treated headline metrics as conclusions; the control run happened only after the user asked for it."
+intervention = []
+evidence = "Batch-reviewer trace review of a backtest research session; the assistant later stated that the order was reversed."
+notes = "Repair proposal: a control-first gate before any metric conclusion. The downstream project owns the implementation; PCH records the reusable pattern."
+
+[[incident]]
+id = "INC-0004"
+date = "2026-11-20"
+title = "Trade reports parsed back into new signals"
+edge = "model-tool"
+fault = "model"
+mode = "state-tracking failure"
+earliest_unrecoverable = "The ingestion path allowed a congratulatory trade report to be appended to the previous message and parsed as a new signal, with no message-id deduplication."
+intervention = []
+evidence = "Batch-reviewer trace review; the signal count rose, then fell after duplicate message ids were cleared."
+notes = "Repair proposal: a unique message id and a message-type gate. This is a downstream project change, not an OMP harness change; it is recorded here because the failure pattern recurs."
