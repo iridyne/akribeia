@@ -28,7 +28,7 @@ target = "APPEND-SYSTEM-one-shot.md"
 value = "Four-line model-agnostic fragment with target: *; replaces the model-filtered cheap-models fragment."
 claims = ["H-001", "H-003", "LIT-009"]
 status = "hypothesis"
-evidence = "EXP-0001, EXP-0003"
+evidence = "EXP-0001, EXP-0003, EXP-0011"
 notes = "Delivered to main and subagents; verified by prompt assertions."
 
 [[change]]

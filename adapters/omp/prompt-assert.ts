@@ -16,6 +16,7 @@ export default function promptAssert(pi: ExtensionAPI): void {
 			["read-exception", s.includes("read 不可达")],
 			["rules-permission-exception", s.includes("权限例外")],
 			["rules-probe-conclusion", s.includes("结果到达即收口")],
+			["rules-architecture-research", s.includes("架构级未知先查证")],
 			["repo-rules-relative", s.includes('<context-file path=\\"AGENTS.md\\">')],
 		];
 		for (const [name, value] of checks) process.stderr.write(`ASSERT ${name}=${value}\n`);

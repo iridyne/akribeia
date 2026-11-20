@@ -63,7 +63,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 |---|---|---|---|---|
 | M-001 | RULES.md:17 | hypothesis | H-002, LIT-007 | EXP-0002 |
 | M-002 | RULES.md:32 | hypothesis | H-001, LIT-008 | EXP-0001 |
-| M-003 | APPEND-SYSTEM-one-shot.md | hypothesis | H-001, H-003, LIT-009 | EXP-0001, EXP-0003 |
+| M-003 | APPEND-SYSTEM-one-shot.md | hypothesis | H-001, H-003, LIT-009 | EXP-0001, EXP-0003, EXP-0011 |
 | M-004 | config.yml:task.prewalk | decision | D-002, LIT-004 |  |
 | M-005 | config.yml:ttsr.judge | decision | D-002 |  |
 | M-006 | config.yml:task.completionProbe | decision | D-002 |  |

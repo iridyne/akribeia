@@ -64,7 +64,7 @@ The review changed five things:
 4. **Oracle checks.** `audit.py --selftest` feeds a known-good and a known-bad ledger through the validator, so a broken validator cannot pass silently.
 5. **Tooling restraint.** No MLflow, W&B, LangSmith, or hosted eval platform in v1. They solve multi-user scale and add data movement; the current bottleneck is evidence quality, not storage.
 
-## Links
+## 7. Links
 
 - Inspect AI — <https://inspect.aisi.org.uk/>
 - HAL Harness — <https://github.com/princeton-pli/hal-harness>
@@ -83,7 +83,7 @@ The review changed five things:
 - OpenEvolve — <https://github.com/algorithmicsuperintelligence/openevolve>
 - OpenTelemetry GenAI semantic conventions — <https://github.com/open-telemetry/semantic-conventions-genai>
 
-## 7. Open questions
+## 8. Open questions
 
 - Is Inspect AI worth adopting once the eval set exceeds ~20 assertions?
 - Does GEPA improve rule quality on a held-out set without overfitting to one user?
