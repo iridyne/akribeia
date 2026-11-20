@@ -160,3 +160,23 @@ claims = ["D-010", "LIT-013"]
 status = "decision"
 evidence = ""
 notes = "Proves the rules reach the provider payload; run after every rule change."
+
+[[change]]
+id = "M-017"
+date = "2026-11-20"
+target = "extensions-last/system-prompt-replace/index.ts"
+value = "Upstream 1.2.1 delivery: send the edited system prompt at every prompt; keep the delta only for a run that skipped the prompt hook."
+claims = ["H-012", "LIT-003", "LIT-013"]
+status = "hypothesis"
+evidence = "EXP-0014"
+notes = "Replaces the reminder-only delivery. Requires the new _shared/omomp-shared/context-delta.ts."
+
+[[change]]
+id = "M-018"
+date = "2026-11-20"
+target = "extensions/delete-guard, extensions/tool-policy-nag"
+value = "Classify eval sh helper commands: delete-guard blocks non-literal and deletion commands; the pty lane refuses terminal and open-ended commands."
+claims = ["LIT-001", "D-002", "H-008"]
+status = "justified"
+evidence = ""
+notes = "Pure code, zero tokens. Verified by a canary file and a refused tail -f."

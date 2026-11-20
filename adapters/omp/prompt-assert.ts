@@ -10,7 +10,7 @@ export default function promptAssert(pi: ExtensionAPI): void {
 			["rule1-doubt-them", s.includes("NEVER rerun checks to doubt them")],
 			["rule2-add-avoidable", s.includes("NEVER add avoidable allocation")],
 			["rule4-devices-not-functions", s.includes("Devices are not functions")],
-			["delta-reminder", s.includes("omp-config/system-prompt-replace")],
+			["spr-direct-edit", !s.includes("omp-config/system-prompt-replace")],
 			["model-delta", s.includes("文件检查只用 `read`/`grep`/`glob`")],
 			["one-shot-conclusion", s.includes("禁止以原始工具输出结束回合")],
 			["read-exception", s.includes("read 不可达")],
