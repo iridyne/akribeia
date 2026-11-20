@@ -17,6 +17,12 @@ The repository is also a live playground. The author's daily agent sessions are 
 
 > We do not ship hypotheses as findings.
 
+## What this is not
+
+- **Not a prompt library.** A prompt without a falsifier is a preference. Here it is a hypothesis with an experiment attached.
+- **Not a model leaderboard.** The model is held fixed. The subject is the harness around it.
+- **Not a paper club.** The ledger is live: real sessions update it every week, including the results that refute us.
+
 ## The loop
 
 ```mermaid
@@ -122,6 +128,8 @@ Disable it with `launchctl bootout gui/$UID/com.iridyne.pch`.
 4. **No secrets, no raw traces.** The repository holds aggregates and labels only. `audit.py` rejects common key, token, private-IP, and home-path patterns.
 5. **One variable per experiment.** A change that bundles three mechanisms cannot attribute its effect.
 6. **Model-agnostic by default.** Rules are delivered to the main session and subagents unless a claim justifies a narrower target.
+
+Scope: the map covers every deliberate change to the live harness. Untouched upstream defaults are not claims; the map grows as the harness changes.
 
 ## Contributing
 
