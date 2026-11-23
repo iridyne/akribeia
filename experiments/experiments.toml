@@ -15,7 +15,7 @@ falsifier = "No >=25% relative reduction, or turns per user message rises >=20%.
 stop_rule = "At 20 sessions, promote or refute. At 40 sessions with no direction, stop."
 confounds = "Task mix, model alias changes, other rule edits shipped the same week."
 started = "2026-11-20"
-result = ""
+result = "2026-11-23: 0/20 labeled. Turn-level labels need the event table, which is unavailable (INC-0005); the window also contributes no valid samples because M-003 is not delivered."
 
 [[experiment]]
 id = "EXP-0002"
@@ -31,7 +31,7 @@ falsifier = "No >=25% relative reduction, or the same violation recurs while a s
 stop_rule = "At 20 sessions, promote or refute. If root-only reads are absent from the sample, extend to 40 sessions."
 confounds = "Remote-diagnosis frequency; whether the rule is retrieved before the tool call."
 started = "2026-11-20"
-result = ""
+result = "2026-11-23: 0/20. The metric needs trace labels, and the collector cannot supply a denominator while session_query is unavailable (INC-0005)."
 
 [[experiment]]
 id = "EXP-0003"
@@ -226,5 +226,22 @@ falsifier = "No adherence improvement, or cache hit rate drops more than 10 poin
 stop_rule = "Stop after 30 sessions per arm or 60 days."
 confounds = "Rule edits shipped in the same window; model alias changes; cache warmth."
 power = "30 sessions per arm is a weak sample; treat a small difference as noise."
-started = ""
-result = ""
+started = "2026-11-20"
+result = "2026-11-23: 0/30 per arm. The direct-edit arm is not delivered at all (INC-0005), so the window contributes no samples."
+
+[[experiment]]
+id = "EXP-0015"
+title = "Weekly payload gate versus no gate"
+status = "running"
+hypothesis = "H-013"
+intervention = "M-019"
+design = "Before/after labeled quasi-experimental: the gate must stay on, so it is not toggled. Each weekly run records the gate result and whether a lapse reached the metrics step."
+metric = "undetected_delivery_lapses"
+baseline = "1 lapse (2026-11-23 weekly run: 5 of 11 assertions false, 6 extension load errors)"
+sample = "8 weekly cycles"
+falsifier = "A lapse reaches the metrics step without the gate failing, or the gate fails while every assertion is true."
+stop_rule = "Stop after 8 cycles or 2 false alarms."
+confounds = "Coverage is limited to the assertions in the probe; an extension can fail while no assertion covers it. The gate aborts the run, so a lapse is recorded by hand rather than by the reviewer."
+power = "8 cycles is a weak sample; the deterministic failure mode makes a single caught lapse informative."
+started = "2026-11-23"
+result = "Cycle 1 (2026-11-23): gate implemented and exercised; it fails as expected on the current payload and passes the assertion branch against a fixture probe."

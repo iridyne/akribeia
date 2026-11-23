@@ -83,7 +83,8 @@ The distinction is enforced by `scripts/audit.py`: a `justified` change must cit
 | `scripts/report.py` | Renders `reports/ledger.md` from the ledgers |
 | `scripts/collect.py` | OMP adapter: pulls session metrics inside the agent runtime |
 | `prompts/weekly-review.md` | The batch reviewer's brief |
-| `scripts/weekly.sh` | Deterministic report + batch review |
+| `scripts/weekly.sh` | Deterministic report + payload gate + batch review |
+| `scripts/delivery-check.sh` | Fails the weekly job when a mapped rule is missing from the provider payload |
 | `scripts/install-schedule.sh` | Installs the weekly LaunchAgent on macOS |
 | `adapters/omp/` | Prompt assertion probe and metric collector for the OMP runtime |
 

@@ -47,3 +47,27 @@ earliest_unrecoverable = "The ingestion path allowed a congratulatory trade repo
 intervention = []
 evidence = "Batch-reviewer trace review; the signal count rose, then fell after duplicate message ids were cleared."
 notes = "Repair proposal: a unique message id and a message-type gate. This is a downstream project change, not an OMP harness change; it is recorded here because the failure pattern recurs."
+
+[[incident]]
+id = "INC-0005"
+date = "2026-11-23"
+title = "Six extensions failed to load, removing the collector tool and three rule-delivery mechanisms from the payload"
+edge = "model-tool"
+fault = "harness"
+mode = "tool recovery failure"
+earliest_unrecoverable = "At runtime startup the extension host could not load six extensions (two missing module exports, four unresolved package imports); the sanctioned session_query tool and the rule-delivery extensions never entered the session, so no later step could recover."
+intervention = []
+evidence = "Reproduce with scripts/delivery-check.sh on 2026-11-23: 5 of 11 assertions false (one-shot-conclusion, model-delta, repo-rules-relative, rule1-doubt-them, rule2-add-avoidable) and 6 extension load errors. The same startup errors appear in the local weekly log, which stays out of the repository. session_query was absent from the eval tool surface."
+notes = "Missing evidence: which runtime release introduced the API drift, and how long delivery has been broken. The 2026-11-20 weekly run was a dry run and never checked the payload, so it cannot date the lapse. Repair belongs to the live harness (re-pin the dependencies, port the extensions to the current API), outside this repository."
+
+[[incident]]
+id = "INC-0006"
+date = "2026-11-23"
+title = "Payload assertion passes vacuously when the extension it guards is absent"
+edge = "model-grader"
+fault = "grader"
+mode = "verification failure"
+earliest_unrecoverable = "The probe proved direct delivery by asserting the absence of a config-path string; with the replacing extension dead, the string is absent for the wrong reason and the assertion reports true."
+intervention = []
+evidence = "adapters/omp/prompt-assert.ts:13 asserts the string is absent; the same probe run reported spr-direct-edit=true while the extension failed to load."
+notes = "Fix belongs to the probe: assert a delivered string instead of an absent one. Not bundled into this week's intervention, because the proposed gate detects load failures on stderr and does not depend on assertion polarity."

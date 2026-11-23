@@ -17,6 +17,12 @@ LOG="data/weekly-$STAMP.log"
   python3 scripts/audit.py
   python3 scripts/report.py --write
 
+  # A rule that is not in the payload makes this week's metrics meaningless.
+  if ! ./scripts/delivery-check.sh; then
+    echo "delivery gate failed: fix delivery, then record an incident"
+    exit 1
+  fi
+
   if [[ "${DRY_RUN:-0}" == "1" ]]; then
     echo "dry run: skipping batch reviewer"
     exit 0

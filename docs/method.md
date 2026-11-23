@@ -133,7 +133,7 @@ weekly.sh ──► report.py (deterministic) ───────────�
 - `collect.py` runs inside the agent runtime and uses the session query API. It never reads raw session files.
 - `audit.py --selftest` runs a known-good and a known-bad ledger through the validator, so a broken validator cannot pass silently. This is the oracle check borrowed from evaluation harnesses.
 - Costs and tokens are recorded next to every experiment result; a change that improves a metric at a much higher token cost is not automatically an improvement.
-- `weekly.sh` is the only scheduled entry point. It writes a log under `data/`.
+- `weekly.sh` is the only scheduled entry point. It writes a log under `data/`, and it runs the payload gate (`scripts/delivery-check.sh`) before the reviewer: a rule that is missing from the provider payload aborts the run instead of producing metrics against a harness that is not the configured one.
 - The batch reviewer may edit `claims/`, `experiments/`, `incidents/`, and `mapping/`. It may open a PR. It may not merge, force-push, or edit `main` directly.
 - CI runs `audit.py` and `report.py --check` on every push and PR.
 

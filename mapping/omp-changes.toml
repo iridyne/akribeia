@@ -180,3 +180,13 @@ claims = ["LIT-001", "D-002", "H-008"]
 status = "justified"
 evidence = ""
 notes = "Pure code, zero tokens. Verified by a canary file and a refused tail -f."
+
+[[change]]
+id = "M-019"
+date = "2026-11-23"
+target = "scripts/weekly.sh"
+value = "Run scripts/delivery-check.sh before the batch reviewer; a false payload assertion or an extension load error aborts the run."
+claims = ["H-013", "D-010"]
+status = "hypothesis"
+evidence = "EXP-0015"
+notes = "Wires the existing prompt assertion probe into the scheduled loop. No new detection logic; the gate reuses adapters/omp/prompt-assert.ts."

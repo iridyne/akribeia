@@ -3,7 +3,7 @@
 Generated from `claims/`, `mapping/`, `experiments/`, and `incidents/` by `scripts/report.py`.
 Do not edit by hand. Run `python3 scripts/report.py --write`.
 
-**Coverage:** 18/18 changes mapped to a claim (100%).
+**Coverage:** 19/19 changes mapped to a claim (100%).
 
 ## Literature claims
 
@@ -42,6 +42,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | H-010 | hypothesis | A local long-term memory improves recall-dependent tasks without polluting the working context. | EXP-0010 | Recall precision below 50%, or context tokens rise without a reduction in repeated questions. |
 | H-011 | hypothesis | A control-first gate before reporting headline metrics reduces premature conclusions in research sessions. | EXP-0013 | No reduction after 10 research reports, or the gate adds more than one turn to every report. |
 | H-012 | hypothesis | Delivering the edited system prompt itself at every prompt improves rule adherence over a reminder that quotes each edit. | EXP-0014 | Adherence shows no improvement, or cache hit rate drops by more than 10 points. |
+| H-013 | hypothesis | A deterministic payload gate at the start of the weekly job detects a mapped rule that is missing from the provider payload, so no weekly cycle measures an undelivered intervention. | EXP-0015 | A delivery lapse reaches the metrics step without the gate failing, or the gate fails while every assertion is true. |
 
 ## Decisions
 
@@ -81,6 +82,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | M-016 | tests/prompt-assert.ts | decision | D-010, LIT-013 |  |
 | M-017 | extensions-last/system-prompt-replace/index.ts | hypothesis | H-012, LIT-003, LIT-013 | EXP-0014 |
 | M-018 | extensions/delete-guard, extensions/tool-policy-nag | justified | LIT-001, D-002, H-008 |  |
+| M-019 | scripts/weekly.sh | hypothesis | H-013, D-010 | EXP-0015 |
 
 ## Experiments
 
@@ -100,6 +102,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | EXP-0012 | planned | H-005 | judge_human_kappa, coverage, false_failure_rate | Kappa below 0.6, or the reviewer's flags miss more than 30% of human-flagged failures. |
 | EXP-0013 | planned | H-011 | premature_metric_conclusions_per_100 | No reduction, or the gate adds more than one turn to every report. |
 | EXP-0014 | running | H-012 | rule_adherence_rate, prompt_cache_hit_rate | No adherence improvement, or cache hit rate drops more than 10 points. |
+| EXP-0015 | running | H-013 | undetected_delivery_lapses | A lapse reaches the metrics step without the gate failing, or the gate fails while every assertion is true. |
 
 ## Incidents
 
@@ -109,3 +112,5 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | INC-0002 | model-tool | model | incorrect tool selection | M-001 |
 | INC-0003 | model-owner | model | satisficing |  |
 | INC-0004 | model-tool | model | state-tracking failure |  |
+| INC-0005 | model-tool | harness | tool recovery failure |  |
+| INC-0006 | model-grader | grader | verification failure |  |
