@@ -109,3 +109,23 @@ source = "LIT-012"
 url = "https://arxiv.org/abs/2605.26112"
 scope = "notes, network facts, environment facts"
 notes = "Mitigates stale-but-confident memory."
+
+[[claim]]
+id = "D-012"
+statement = "The repository is a research prototype for human-harness-agent co-optimization, not a product; engineering work is prioritized by whether it makes that loop measurable or reproducible."
+status = "supported"
+confidence = "high"
+source = "owner decision (2026-11-24)"
+url = ""
+scope = "this repository"
+notes = "The question is which harness composition yields the most finished work per token and the fewest repair turns for one fixed model and one fixed person. Findings are scoped to one developer."
+
+[[claim]]
+id = "D-013"
+statement = "Zero runtime dependencies and local-only execution are non-negotiable; distribution polish and CI wiring are deferred until the detectors cover failures this project actually hits."
+status = "supported"
+confidence = "high"
+source = "owner decision (2026-11-24) + D-006"
+url = ""
+scope = "this repository"
+notes = "A gate that needs an install step before it can check a payload has already lost. CI re-running the same fixtures the test suite covers adds no evidence."

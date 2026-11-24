@@ -8,3 +8,4 @@
 
 {"ts":"2026-11-24","claim":"H-014","from":"open question #4 in docs/prior-art.md","to":"supported (simulation); Rand-Alt Perm controls FP at 5.6% vs AB 41.6% at N=40, rho=0.7","evidence":"EXP-0016","note":"Quantitative N-of-1 AR(1) Monte Carlo study (reports/2026-11-24-nof1-power-study.md)."}
 {"ts":"2026-11-24","claim":"H-015","from":"INC-0006 vacuous-pass incident","to":"supported (deterministic oracle); negative assertions require positive witness","evidence":"EXP-0017","note":"Implemented in scripts/payload_gate.py and adapters/omp/prompt-assert.ts (M-020)."}
+{"ts":"2026-11-24","claim":"H-016","from":"absent; friction reported only as pooled tool error rate","to":"hypothesis; repair turns per completed session proposed as the friction metric, uncalibrated","evidence":"EXP-0018","note":"Program pivot to human-harness-agent co-optimization (D-012). The metric cannot promote anything until its agreement with human labels is measured."}

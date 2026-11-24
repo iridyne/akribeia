@@ -169,6 +169,18 @@ falsifier = "Rand-Alt Perm exceeds 10% Type I error at rho=0.7, or Before/After 
 notes = "Verified via scripts/nof1_power.py --seed 42 --trials 1000 (reports/2026-11-24-nof1-power-study.md)."
 
 [[claim]]
+id = "H-016"
+statement = "Human-agent friction is measurable from session traces: repair turns per completed session, computed from a text heuristic, agrees with the human's own re-steer labels closely enough to steer experiments."
+status = "hypothesis"
+confidence = "low"
+source = "local + docs/program.md"
+scope = "single-user OMP sessions, one model"
+experiment = "EXP-0018"
+metric = "repair_turn_precision, repair_turn_recall, spearman_vs_human_labels"
+falsifier = "Spearman agreement below 0.7 on 20 labeled sessions, or the heuristic cannot label at least 80% of sessions."
+notes = "A heuristic may draft labels; promotion of any harness claim that depends on it needs the calibrated metric (docs/method.md section 3). Until then, tool error rate is the only friction number this project reports."
+
+[[claim]]
 id = "H-015"
 statement = "Requiring every negative wire-payload assertion to declare a positive witness assertion (requires_witness) prevents vacuous passes when the guarded extension fails to load (INC-0006)."
 status = "supported"

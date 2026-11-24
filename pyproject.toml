@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "akribeia"
+version = "0.3.0"
+description = "Wire-payload gate, trace telemetry, and N-of-1 experiment rig for coding-agent harnesses."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+akribeia = "akribeia:main"
+
+[tool.setuptools]
+package-dir = { "" = "scripts" }
+py-modules = ["akribeia", "audit", "report", "payload_gate", "analyze_traces", "nof1_power"]

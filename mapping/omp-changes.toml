@@ -200,3 +200,33 @@ claims = ["H-015", "D-010"]
 status = "justified"
 evidence = "EXP-0017"
 notes = "Closes INC-0006 vacuous-pass defect both in the OMP probe and in the provider-agnostic contract gate."
+
+[[change]]
+id = "M-021"
+date = "2026-11-24"
+target = "README.md, docs/program.md"
+value = "README leads with the engineering failure modes and a real failing gate run; etymology, literature anchors, and the ledger map move below the empirical section. docs/program.md states the harness-fit question, the three measurement axes, the self-evolution loop, and a roadmap whose status column is checkable."
+claims = ["D-012"]
+status = "decision"
+evidence = ""
+notes = "Documentation change only; no measurement claim is made. The README's failing output is copied verbatim from scripts/payload_gate.py against examples/demo-payloads/anthropic_dead_extension.json."
+
+[[change]]
+id = "M-022"
+date = "2026-11-24"
+target = "scripts/akribeia.py, pyproject.toml, scripts/audit.py"
+value = "Unified zero-dependency CLI (gate/trace/power/audit/report) forwarding each module's exit code; pyproject console script with dependencies = []; ledger root resolved from AKRIBEIA_ROOT, then the nearest ancestor of cwd holding claims/."
+claims = ["D-013"]
+status = "decision"
+evidence = ""
+notes = "Install verified in a throwaway venv: 'akribeia report --check' and 'akribeia audit' both exit 0 from the checkout."
+
+[[change]]
+id = "M-023"
+date = "2026-11-24"
+target = "examples/demo-payloads/anthropic_dead_extension.json"
+value = "Failing fixture: a payload whose system text lost both mapped rules, so the negative assertion must be refused by the anti-vacuous guard."
+claims = ["D-013", "H-015"]
+status = "justified"
+evidence = "EXP-0017"
+notes = "The README's example output and the CI-free manual check both use this fixture; exit code 1 with 'blocked vacuous pass' is the expected observation."

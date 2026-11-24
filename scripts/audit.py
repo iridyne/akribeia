@@ -10,13 +10,31 @@ Standard library only. Exit code 1 on any error.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import tomllib
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parent.parent
+
+def resolve_root() -> Path:
+    """Repo root: AKRIBEIA_ROOT, else the nearest ancestor of cwd holding claims/.
+
+    Needed because an installed console script lives in site-packages, where the
+    ledgers are not; the ledgers belong to whichever checkout you are standing in.
+    """
+    override = os.environ.get("AKRIBEIA_ROOT", "").strip()
+    if override:
+        return Path(override).expanduser().resolve()
+    here = Path(__file__).resolve().parent
+    for candidate in (here.parent, Path.cwd(), *Path.cwd().parents):
+        if (candidate / "claims").is_dir():
+            return candidate
+    return here.parent
+
+
+ROOT = resolve_root()
 CLAIMS_DIR = ROOT / "claims"
 MAPPING_DIR = ROOT / "mapping"
 EXPERIMENTS_DIR = ROOT / "experiments"

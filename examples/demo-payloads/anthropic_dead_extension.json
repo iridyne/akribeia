@@ -1,0 +1,32 @@
+{
+  "model": "",
+  "max_tokens": 4096,
+  "system": [
+    {
+      "type": "text",
+      "text": "You are a coding agent."
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "Verify repository status."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read",
+      "description": "Read a file safely.",
+      "input_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "bash",
+      "description": "Execute a shell command.",
+      "input_schema": {
+        "type": "object"
+      }
+    }
+  ]
+}

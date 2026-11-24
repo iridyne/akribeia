@@ -8,9 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from audit import load_ledgers
+from audit import ROOT, load_ledgers
 
-ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "reports" / "ledger.md"
 
 

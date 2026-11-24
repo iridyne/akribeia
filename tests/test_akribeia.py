@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import akribeia  # noqa: E402
 import analyze_traces  # noqa: E402
 import audit  # noqa: E402
 import nof1_power  # noqa: E402
@@ -123,6 +124,22 @@ class TestPayloadGate(unittest.TestCase):
         )
         self.assertFalse(res["ok"])
         self.assertEqual(len(res["log_failures"]), 1)
+
+
+class TestCli(unittest.TestCase):
+    def test_help_lists_every_command(self) -> None:
+        self.assertEqual(akribeia.main(["--help"]), 0)
+        self.assertEqual(sorted(akribeia.COMMANDS), ["audit", "gate", "power", "report", "trace"])
+
+    def test_unknown_command_exits_2(self) -> None:
+        self.assertEqual(akribeia.main(["nope"]), 2)
+
+    def test_dispatch_forwards_exit_code(self) -> None:
+        original = sys.argv
+        try:
+            self.assertEqual(akribeia.main(["audit", "--selftest"]), 0)
+        finally:
+            sys.argv = original
 
 
 class TestAnalyzeTraces(unittest.TestCase):
