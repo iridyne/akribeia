@@ -1,0 +1,38 @@
+# Example declarative wire-payload delivery contract for Akribeia.
+# Every negative assertion MUST name a positive `requires_witness` assertion (INC-0006).
+
+[log_gate]
+fatal_patterns = [
+  "Failed to load extension",
+  "SyntaxError:",
+  "Cannot find module",
+]
+
+[[assertion]]
+id = "rule-closure"
+kind = "must_contain"
+scope = "system"
+pattern = "Never end a turn on raw tool output."
+claim = "H-001"
+
+[[assertion]]
+id = "rule-permission-path"
+kind = "must_contain"
+scope = "system"
+pattern = "Use the sanctioned read escalation path instead of eval open()."
+claim = "H-002"
+
+[[assertion]]
+id = "tool-read-present"
+kind = "tool_present"
+scope = "tools"
+pattern = "read"
+claim = "D-002"
+
+[[assertion]]
+id = "no-legacy-placeholder"
+kind = "must_not_contain"
+scope = "any"
+pattern = "LEGACY_SYSTEM_PROMPT_REMINDER"
+requires_witness = "rule-closure"
+claim = "H-012"

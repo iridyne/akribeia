@@ -1,0 +1,24 @@
+{
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4096,
+  "system": [
+    {
+      "type": "text",
+      "text": "Session timestamp: 2026-11-24T14:00:00Z\nYou are a coding agent operating inside an evidence-gated harness.\nNever end a turn on raw tool output.\nUse the sanctioned read escalation path instead of eval open()."
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "Verify repository status."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read",
+      "input_schema": {
+        "type": "object"
+      }
+    }
+  ]
+}

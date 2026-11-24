@@ -17,6 +17,8 @@ omp -p "Reply with the single word: ok" --no-title --no-session \
 
 All lines must be `true`. A `false` means the rule is not in the payload; a startup warning about a replacement target means the host prompt drifted. Fix the rule before measuring anything.
 
+`scripts/delivery-check.sh` runs the same probe and exits non-zero on a `false` assertion or a `Failed to load extension` line. `scripts/weekly.sh` calls it before the batch reviewer, so a broken payload stops the run instead of producing metrics against the wrong harness. `PCH_PROBE` overrides the probe path for testing the pass path.
+
 ## Collect metrics
 
 Inside an OMP eval cell:

@@ -1,0 +1,7 @@
+{"type":"session","id":"demo-002","timestamp":"2026-11-21T10:15:00Z","cwd":"/private/tmp/scratch","version":1}
+{"type":"custom","customType":"system-prompt-digest","timestamp":"2026-11-21T10:15:01Z","data":{"digest":"sha256-drift-001"}}
+{"type":"message","timestamp":"2026-11-21T10:15:02Z","message":{"role":"user","content":"Inspect logs."}}
+{"type":"message","timestamp":"2026-11-21T10:15:04Z","message":{"role":"assistant","stopReason":"toolUse","content":[{"type":"text","text":"Reading logs."}],"usage":{"input":3500,"output":75,"cacheRead":2000,"cacheWrite":3500,"reasoningTokens":20}}}
+{"type":"custom","customType":"system-prompt-digest","timestamp":"2026-11-21T10:15:06Z","data":{"digest":"sha256-drift-002"}}
+{"type":"message","timestamp":"2026-11-21T10:15:07Z","message":{"role":"toolResult","toolName":"bash","isError":false,"content":"INFO line 1\nINFO line 2\nINFO line 3\nINFO line 4\nINFO line 5\nINFO line 6\nINFO line 7\nINFO line 8\n"}}
+{"type":"message","timestamp":"2026-11-21T10:15:10Z","message":{"role":"assistant","stopReason":"stop","content":[{"type":"text","text":"All 8 log lines healthy."}],"usage":{"input":3800,"output":60,"cacheRead":1500,"cacheWrite":3800,"reasoningTokens":15}}}
