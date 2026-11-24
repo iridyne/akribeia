@@ -263,7 +263,7 @@ def summary(ledgers: dict[str, Any]) -> str:
     mapped = len(changes) - len(unmapped)
     coverage = (mapped / len(changes) * 100) if changes else 100.0
     lines = [
-        "PCH audit",
+        "Akribeia audit",
         f"  claims: {len(ledgers['claims'])}",
         "  changes: "
         + ", ".join(f"{key} {value}" for key, value in sorted(statuses.items()))

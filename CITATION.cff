@@ -1,10 +1,10 @@
 cff-version: 1.2.0
-title: "PCH — Proof-Carrying Harness"
+title: "Akribeia — Evidence-Gated Agent Harness Research & Verification"
 message: "If you use this work, cite it as below."
 type: software
 license: MIT
-repository-code: "https://github.com/iridyne/proof-carrying-harness"
-url: "https://github.com/iridyne/proof-carrying-harness"
+repository-code: "https://github.com/iridyne/akribeia"
+url: "https://github.com/iridyne/akribeia"
 authors:
   - name: "Iridyne"
-abstract: "An evidence-gated research loop for agent harness engineering: every configuration change maps to a claim, every hypothesis has a falsifier, and every real failure is localized before it is repaired."
+abstract: "Akribeia (Ancient Greek: exactness, strict verification) is a zero-dependency evidence ledger, wire-payload contract gate, heavy-coding trace telemetry analyzer, and N-of-1 experimental design toolkit for agent harness engineering."

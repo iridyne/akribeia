@@ -12,7 +12,7 @@ STAMP="$(date +%Y-%m-%d)"
 LOG="data/weekly-$STAMP.log"
 
 {
-  echo "== PCH weekly $STAMP =="
+  echo "== Akribeia weekly $STAMP =="
   python3 scripts/audit.py --selftest
   python3 scripts/audit.py
   python3 scripts/report.py --write

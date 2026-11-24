@@ -3,7 +3,7 @@
 Generated from `claims/`, `mapping/`, `experiments/`, and `incidents/` by `scripts/report.py`.
 Do not edit by hand. Run `python3 scripts/report.py --write`.
 
-**Coverage:** 19/19 changes mapped to a claim (100%).
+**Coverage:** 20/20 changes mapped to a claim (100%).
 
 ## Literature claims
 
@@ -43,6 +43,8 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | H-011 | hypothesis | A control-first gate before reporting headline metrics reduces premature conclusions in research sessions. | EXP-0013 | No reduction after 10 research reports, or the gate adds more than one turn to every report. |
 | H-012 | hypothesis | Delivering the edited system prompt itself at every prompt improves rule adherence over a reminder that quotes each edit. | EXP-0014 | Adherence shows no improvement, or cache hit rate drops by more than 10 points. |
 | H-013 | hypothesis | A deterministic payload gate at the start of the weekly job detects a mapped rule that is missing from the provider payload, so no weekly cycle measures an undelivered intervention. | EXP-0015 | A delivery lapse reaches the metrics step without the gate failing, or the gate fails while every assertion is true. |
+| H-014 | supported | Under AR(1) serial dependence (rho >= 0.5), naive before/after harness comparisons inflate Type I false positives above 25%, whereas randomized alternating paired permutation tests keep false positives near nominal 5% while improving power at N >= 40. | EXP-0016 | Rand-Alt Perm exceeds 10% Type I error at rho=0.7, or Before/After stays below 10% Type I error. |
+| H-015 | supported | Requiring every negative wire-payload assertion to declare a positive witness assertion (requires_witness) prevents vacuous passes when the guarded extension fails to load (INC-0006). | EXP-0017 | A negative-only contract is accepted by payload_gate.py, or a negative assertion passes while its positive witness fails. |
 
 ## Decisions
 
@@ -83,6 +85,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | M-017 | extensions-last/system-prompt-replace/index.ts | hypothesis | H-012, LIT-003, LIT-013 | EXP-0014 |
 | M-018 | extensions/delete-guard, extensions/tool-policy-nag | justified | LIT-001, D-002, H-008 |  |
 | M-019 | scripts/weekly.sh | hypothesis | H-013, D-010 | EXP-0015 |
+| M-020 | adapters/omp/prompt-assert.ts, scripts/payload_gate.py | justified | H-015, D-010 | EXP-0017 |
 
 ## Experiments
 
@@ -103,6 +106,8 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | EXP-0013 | planned | H-011 | premature_metric_conclusions_per_100 | No reduction, or the gate adds more than one turn to every report. |
 | EXP-0014 | running | H-012 | rule_adherence_rate, prompt_cache_hit_rate | No adherence improvement, or cache hit rate drops more than 10 points. |
 | EXP-0015 | running | H-013 | undetected_delivery_lapses | A lapse reaches the metrics step without the gate failing, or the gate fails while every assertion is true. |
+| EXP-0016 | complete | H-014 | type1_fp_rate, power | Rand-Alt Perm exceeds 10% FP at rho=0.7, or AB stays below 10% FP. |
+| EXP-0017 | complete | H-015 | vacuous_pass_rate, schema_rejection_rate | Any vacuous pass occurs or negative-only contract passes schema validation. |
 
 ## Incidents
 
@@ -113,4 +118,4 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | INC-0003 | model-owner | model | satisficing |  |
 | INC-0004 | model-tool | model | state-tracking failure |  |
 | INC-0005 | model-tool | harness | tool recovery failure |  |
-| INC-0006 | model-grader | grader | verification failure |  |
+| INC-0006 | model-grader | grader | verification failure | M-020 |

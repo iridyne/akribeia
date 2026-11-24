@@ -9,16 +9,31 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Validator self-test
+      - name: Ledger validator self-test
         run: python3 scripts/audit.py --selftest
-      - name: Audit ledgers
+      - name: Audit ledgers & secret hygiene
         run: python3 scripts/audit.py
-      - name: Ledger is current
+      - name: Generated ledger is current
         run: python3 scripts/report.py --check
+      - name: Payload gate oracle self-test
+        run: python3 scripts/payload_gate.py --selftest
+      - name: Payload gate demo contracts (Anthropic + OpenAI)
+        run: |
+          python3 scripts/payload_gate.py \
+            --contract contracts/example-harness-contract.toml \
+            --payload examples/demo-payloads/anthropic_good.json \
+            --baseline-payload examples/demo-payloads/anthropic_good.json
+          python3 scripts/payload_gate.py \
+            --contract contracts/example-harness-contract.toml \
+            --payload examples/demo-payloads/openai_good.json
+      - name: Demo trace analyzer smoke check
+        run: python3 scripts/analyze_traces.py examples/demo-sessions --markdown
+      - name: Full zero-dependency unit test suite
+        run: python3 -m unittest discover -s tests -v

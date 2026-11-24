@@ -68,6 +68,6 @@ edge = "model-grader"
 fault = "grader"
 mode = "verification failure"
 earliest_unrecoverable = "The probe proved direct delivery by asserting the absence of a config-path string; with the replacing extension dead, the string is absent for the wrong reason and the assertion reports true."
-intervention = []
+intervention = ["M-020"]
 evidence = "adapters/omp/prompt-assert.ts:13 asserts the string is absent; the same probe run reported spr-direct-edit=true while the extension failed to load."
-notes = "Fix belongs to the probe: assert a delivered string instead of an absent one. Not bundled into this week's intervention, because the proposed gate detects load failures on stderr and does not depend on assertion polarity."
+notes = "Resolved via M-020 (2026-11-24): paired spr-direct-edit with positive replacement witnesses in adapters/omp/prompt-assert.ts and codified requires_witness schema enforcement in scripts/payload_gate.py."

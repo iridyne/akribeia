@@ -1,0 +1,37 @@
+{
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4096,
+  "system": [
+    {
+      "type": "text",
+      "text": "You are a coding agent operating inside an evidence-gated harness.\nNever end a turn on raw tool output.\nUse the sanctioned read escalation path instead of eval open()."
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "Verify repository status."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read",
+      "description": "Read a file safely.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "bash",
+      "description": "Execute a shell command.",
+      "input_schema": {
+        "type": "object"
+      }
+    }
+  ]
+}

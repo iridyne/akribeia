@@ -1,0 +1,22 @@
+{
+  "model": "gpt-5.2",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a coding agent operating inside an evidence-gated harness.\nNever end a turn on raw tool output.\nUse the sanctioned read escalation path instead of eval open()."
+    },
+    {
+      "role": "user",
+      "content": "Verify repository status."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "read",
+        "description": "Read a file safely."
+      }
+    }
+  ]
+}
