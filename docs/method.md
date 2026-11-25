@@ -20,7 +20,7 @@ The ledgers are the source of truth. Prose documents explain them; they do not o
 3. **Compare.** Recompute the metrics of every running experiment. Apply its stop rule. A running experiment that has met its sample and missed its falsifier is marked `refuted`.
 4. **Propose.** At most one new intervention per week. It must name the factor it changes, the claim it tests, the metric, the baseline, the sample, and the falsifier. Choose the design before running it: ABAB or a randomized alternating schedule for a reversible change, before/after only as a labeled quasi-experiment.
 5. **Verify.** Run `scripts/audit.py`, regenerate the ledger, and run the narrowest check that exercises the change.
-6. **Publish.** Open a pull request. Never merge automatically.
+6. **Publish.** Commit and push to `main` (single maintainer). Never force-push.
 
 The weekly batch is the only place an LLM judge is allowed (D-002). Interactive guardrails stay deterministic.
 
@@ -134,7 +134,7 @@ weekly.sh ──► report.py (deterministic) ───────────�
 - `audit.py --selftest` runs a known-good and a known-bad ledger through the validator, so a broken validator cannot pass silently. This is the oracle check borrowed from evaluation harnesses.
 - Costs and tokens are recorded next to every experiment result; a change that improves a metric at a much higher token cost is not automatically an improvement.
 - `weekly.sh` is the only scheduled entry point. It writes a log under `data/`, and it runs the payload gate (`scripts/delivery-check.sh`) before the reviewer: a rule that is missing from the provider payload aborts the run instead of producing metrics against a harness that is not the configured one.
-- The batch reviewer may edit `claims/`, `experiments/`, `incidents/`, and `mapping/`. It may open a PR. It may not merge, force-push, or edit `main` directly.
+- The batch reviewer may edit `claims/`, `experiments/`, `incidents/`, and `mapping/`, and push the result to `main`. It may not force-push, and it may not push while `audit.py` fails.
 - CI runs `audit.py` and `report.py --check` on every push and PR.
 
 ## 8. Threats to validity

@@ -3,7 +3,7 @@
 Generated from `claims/`, `mapping/`, `experiments/`, and `incidents/` by `scripts/report.py`.
 Do not edit by hand. Run `python3 scripts/report.py --write`.
 
-**Coverage:** 23/23 changes mapped to a claim (100%).
+**Coverage:** 24/24 changes mapped to a claim (100%).
 
 ## Literature claims
 
@@ -64,6 +64,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | D-011 | Volatile facts are date-stamped and re-verified before acting; memory is treated as a hypothesis until checked. | LIT-012 |
 | D-012 | The repository is a research prototype for human-harness-agent co-optimization, not a product; engineering work is prioritized by whether it makes that loop measurable or reproducible. | owner decision (2026-11-24) |
 | D-013 | Zero runtime dependencies and local-only execution are non-negotiable; distribution polish and CI wiring are deferred until the detectors cover failures this project actually hits. | owner decision (2026-11-24) + D-006 |
+| D-014 | One maintainer, one branch: changes commit and push directly to main. Force-push stays forbidden, and a failing audit or an unmapped change blocks the push. | owner decision (2026-11-25) |
 
 ## Changes
 
@@ -92,6 +93,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | M-021 | README.md, docs/program.md | decision | D-012 |  |
 | M-022 | scripts/akribeia.py, pyproject.toml, scripts/audit.py | decision | D-013 |  |
 | M-023 | examples/demo-payloads/anthropic_dead_extension.json | justified | D-013, H-015 | EXP-0017 |
+| M-024 | AGENTS.md:13, CONTRIBUTING.md:33, docs/method.md:23, docs/program.md:67 | decision | D-014 |  |
 
 ## Experiments
 

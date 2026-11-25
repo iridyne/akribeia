@@ -30,7 +30,7 @@ Use the experiment template. One variable. A metric with a denominator. A baseli
 1. Add a `[[change]]` entry to `mapping/omp-changes.toml`.
 2. Map it to claims and an experiment.
 3. Run the checks below.
-4. Open a PR. Do not merge your own change without review.
+4. Commit and push to `main`. The audit and the claim mapping are the review.
 
 ## Checks
 
@@ -40,7 +40,7 @@ python3 scripts/audit.py
 python3 scripts/report.py --write
 ```
 
-If a rule or prompt changed, also run the OMP prompt assertion probe in `adapters/omp/README.md` and paste the result into the PR.
+If a rule or prompt changed, also run the OMP prompt assertion probe in `adapters/omp/README.md` and paste the result into the commit message.
 
 ## Status discipline
 
@@ -63,7 +63,7 @@ The repository is public. Do not commit:
 
 ## Review
 
-A PR lands when:
+A change lands when:
 
 - the audit passes;
 - every change maps to a claim;

@@ -33,12 +33,12 @@ notes = "Upstream updates are reviewed and absorbed manually, never applied whol
 [[claim]]
 id = "D-004"
 statement = "Automated changes are proposed as pull requests. Nothing auto-merges."
-status = "supported"
+status = "superseded"
 confidence = "high"
 source = "owner decision + LIT-016"
 url = "https://doi.org/10.1145/302979.303030"
 scope = "this deployment"
-notes = "The human owns acceptance; the system owns collection, labeling, and drafting."
+notes = "Superseded by D-014 on 2026-11-25: the repository has one maintainer, so the PR gate was replaced by the audit gate. The human still owns acceptance."
 
 [[claim]]
 id = "D-005"
@@ -129,3 +129,13 @@ source = "owner decision (2026-11-24) + D-006"
 url = ""
 scope = "this repository"
 notes = "A gate that needs an install step before it can check a payload has already lost. CI re-running the same fixtures the test suite covers adds no evidence."
+
+[[claim]]
+id = "D-014"
+statement = "One maintainer, one branch: changes commit and push directly to main. Force-push stays forbidden, and a failing audit or an unmapped change blocks the push."
+status = "supported"
+confidence = "high"
+source = "owner decision (2026-11-25)"
+url = ""
+scope = "this repository"
+notes = "Supersedes D-004's PR requirement. The audit and the claim mapping are the review; the ledger keeps every rollback. Multiple maintainers would bring the PR gate back."

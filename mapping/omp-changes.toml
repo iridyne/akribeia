@@ -230,3 +230,13 @@ claims = ["D-013", "H-015"]
 status = "justified"
 evidence = "EXP-0017"
 notes = "The README's example output and the CI-free manual check both use this fixture; exit code 1 with 'blocked vacuous pass' is the expected observation."
+
+[[change]]
+id = "M-024"
+date = "2026-11-25"
+target = "AGENTS.md:13, CONTRIBUTING.md:33, docs/method.md:23, docs/program.md:67"
+value = "Single-maintainer workflow: commit and push directly to main. Force-push stays forbidden; a failing audit or an unmapped change blocks the push. D-004 (PR gate) superseded by D-014."
+claims = ["D-014"]
+status = "decision"
+evidence = ""
+notes = "The audit and claim mapping are the review. Multiple maintainers would restore the PR gate."

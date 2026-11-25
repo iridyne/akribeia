@@ -56,7 +56,7 @@ flowchart TD
   F --> G{Clears falsifier?}
   G -->|yes| H[Promote + belief update + report]
   G -->|no| I[Refute or roll back + belief update]
-  H --> J[Human opens the PR]
+  H --> J[Commit + push to main<br/>audit must pass]
   I --> J
   J --> A
 ```
@@ -64,7 +64,7 @@ flowchart TD
 Guardrails, in order of importance:
 
 - **No LLM judge in the interactive path** (`D-002`). Judges label and draft; deterministic metrics promote.
-- **No auto-merge** (`D-004`). The loop may open a PR; a human accepts it.
+- **The audit is the review gate** (`D-014`). One maintainer, so changes push straight to `main`; a failing `audit.py`, an unmapped change, or a force-push blocks the push. The ledger keeps the rollback either way.
 - **Delivery before measurement** (`H-013`, `EXP-0015`). A gate failure aborts the cycle instead of producing numbers about a harness that was not running.
 - **Rollback is a normal outcome**, recorded as an experiment result or incident (`docs/method.md` §9).
 - **Cost sits next to every result.** A change that improves a metric at a much higher token cost is not automatically an improvement (`docs/prior-art.md` §5).

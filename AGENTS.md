@@ -10,7 +10,7 @@ This repository is an evidence ledger, not a chat log. Before editing:
 6. Run `python3 scripts/audit.py --selftest`, `python3 scripts/audit.py`, and `python3 scripts/report.py --write` before you finish.
 7. Inspect files with `read`, `grep`, and `glob`. Do not use shell `cat`/`grep`/`sed` for file inspection.
 8. Never commit secrets, raw prompts, private hosts, or home paths.
-9. Never merge, force-push, or commit to `main`. Open a draft PR.
+9. This repository has a single maintainer: commit and push directly to `main`. Force-push is still forbidden. No PR is required.
 10. If a rule change is part of the work, run the OMP prompt assertion probe and paste the output.
 
 The goal is not a clean story. The goal is a record that survives a hostile reviewer.
