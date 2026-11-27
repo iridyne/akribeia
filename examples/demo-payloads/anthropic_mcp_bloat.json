@@ -1,0 +1,186 @@
+{
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4096,
+  "system": [
+    {
+      "type": "text",
+      "text": "You are a coding agent operating inside an evidence-gated harness.\nNever end a turn on raw tool output.\nUse the sanctioned read escalation path instead of eval open()."
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "Verify repository status."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read",
+      "description": "Read a file safely.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "mcp__chatops__action_01",
+      "description": "Synthetic bloated MCP tool schema 01 that consumes turn-1 context before work starts.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "channel_id": { "type": "string" },
+          "limit": { "type": "integer" }
+        }
+      }
+    },
+    {
+      "name": "mcp__chatops__action_02",
+      "description": "Synthetic bloated MCP tool schema 02 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_03",
+      "description": "Synthetic bloated MCP tool schema 03 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_04",
+      "description": "Synthetic bloated MCP tool schema 04 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_05",
+      "description": "Synthetic bloated MCP tool schema 05 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_06",
+      "description": "Synthetic bloated MCP tool schema 06 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_07",
+      "description": "Synthetic bloated MCP tool schema 07 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_08",
+      "description": "Synthetic bloated MCP tool schema 08 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_09",
+      "description": "Synthetic bloated MCP tool schema 09 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_10",
+      "description": "Synthetic bloated MCP tool schema 10 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_11",
+      "description": "Synthetic bloated MCP tool schema 11 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_12",
+      "description": "Synthetic bloated MCP tool schema 12 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_13",
+      "description": "Synthetic bloated MCP tool schema 13 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_14",
+      "description": "Synthetic bloated MCP tool schema 14 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_15",
+      "description": "Synthetic bloated MCP tool schema 15 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_16",
+      "description": "Synthetic bloated MCP tool schema 16 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_17",
+      "description": "Synthetic bloated MCP tool schema 17 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_18",
+      "description": "Synthetic bloated MCP tool schema 18 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_19",
+      "description": "Synthetic bloated MCP tool schema 19 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_20",
+      "description": "Synthetic bloated MCP tool schema 20 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_21",
+      "description": "Synthetic bloated MCP tool schema 21 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_22",
+      "description": "Synthetic bloated MCP tool schema 22 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_23",
+      "description": "Synthetic bloated MCP tool schema 23 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_24",
+      "description": "Synthetic bloated MCP tool schema 24 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_25",
+      "description": "Synthetic bloated MCP tool schema 25 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_26",
+      "description": "Synthetic bloated MCP tool schema 26 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_27",
+      "description": "Synthetic bloated MCP tool schema 27 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_28",
+      "description": "Synthetic bloated MCP tool schema 28 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_29",
+      "description": "Synthetic bloated MCP tool schema 29 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    },
+    {
+      "name": "mcp__chatops__action_30",
+      "description": "Synthetic bloated MCP tool schema 30 that consumes turn-1 context before work starts.",
+      "input_schema": { "type": "object", "properties": { "channel_id": { "type": "string" } } }
+    }
+  ]
+}

@@ -18,11 +18,23 @@ import collections
 import json
 import math
 import random
+import re
 import statistics
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+# Uncalibrated bilingual repair-turn cues (R4):
+# Explicitly labeled uncalibrated until validated against >=20 human-labeled incidents (docs/program.md §2, R4).
+ZH_REPAIR_CUES_RE = re.compile(
+    r"(?:不对|错了|不是这个意思|我说的是|重来|重新做|别用|不要用|不要这样|搞错了|理解错了|不是让你|跑偏|偏题|先停|停一下|你没看|不是那个)"
+)
+EN_REPAIR_CUES_RE = re.compile(
+    r"\b(?:no,\s*i\s+(?:said|meant)|that'?s\s+(?:wrong|not\s+right)|not\s+what\s+i\s+asked|stop\s+doing|wrong\s+(?:file|repo|path)|undo\s+that|revert\s+that|start\s+over)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -35,6 +47,11 @@ class SessionSummary:
     tool_errors: int
     aborted: bool
     premature_end: bool
+    completed: bool
+    repair_turns: int
+    repair_cue_zh_turns: int
+    repair_cue_en_turns: int
+    post_abort_followups: int
     input_tokens: int
     output_tokens: int
     cache_read_tokens: int
@@ -47,6 +64,85 @@ class SessionSummary:
     shaken_entries: int
     total_entries: int
     file_bytes: int
+
+
+def _extract_plain_text(content: Any) -> str:
+    """Extract user text internally for heuristic classification; never emitted in output (D-005)."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict) and isinstance(item.get("text"), str):
+                parts.append(item["text"])
+        return "\n".join(parts)
+    if isinstance(content, dict) and isinstance(content.get("text"), str):
+        return content["text"]
+    return ""
+
+
+def classify_repair_turn(text: str, *, after_abort: bool = False) -> tuple[bool, bool, bool, bool]:
+    """Return (is_repair, zh_cue, en_cue, post_abort_followup) without storing or emitting raw text."""
+    zh = bool(ZH_REPAIR_CUES_RE.search(text))
+    en = bool(EN_REPAIR_CUES_RE.search(text))
+    post_abort = bool(after_abort)
+    return (zh or en or post_abort), zh, en, post_abort
+
+
+def evaluate_repair_calibration(
+    predictions: Sequence[bool],
+    labels: Sequence[bool],
+    *,
+    min_samples: int = 20,
+    min_kappa: float = 0.6,
+) -> dict[str, Any]:
+    """Compute agreement & Cohen's kappa for R4 repair-turn heuristic calibration."""
+    if len(predictions) != len(labels):
+        raise ValueError("predictions and labels must have equal length")
+    n = len(labels)
+    if n == 0:
+        return {
+            "n": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "agreement": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "cohen_kappa": 0.0,
+            "calibrated": False,
+        }
+    tp = sum(1 for p, y in zip(predictions, labels) if p and y)
+    fp = sum(1 for p, y in zip(predictions, labels) if p and not y)
+    fn = sum(1 for p, y in zip(predictions, labels) if not p and y)
+    tn = sum(1 for p, y in zip(predictions, labels) if not p and not y)
+    po = (tp + tn) / n
+    p_yes = ((tp + fp) / n) * ((tp + fn) / n)
+    p_no = ((fn + tn) / n) * ((fp + tn) / n)
+    pe = p_yes + p_no
+    kappa = 1.0 if abs(1.0 - pe) < 1e-12 else (po - pe) / (1.0 - pe)
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+    return {
+        "n": n,
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "agreement": round(po, 4),
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1": round(f1, 4),
+        "cohen_kappa": round(kappa, 4),
+        "calibrated": bool(n >= min_samples and kappa >= min_kappa),
+    }
 
 
 def _content_chars(content: Any) -> int:
@@ -88,6 +184,12 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
     tool_calls = 0
     tool_errors = 0
     aborted = False
+    repair_turns = 0
+    repair_cue_zh_turns = 0
+    repair_cue_en_turns = 0
+    post_abort_followups = 0
+    prev_assistant_aborted = False
+    last_tool_is_error = False
     input_tokens = 0
     output_tokens = 0
     cache_read_tokens = 0
@@ -151,6 +253,20 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                 if role == "user":
                     user_turns += 1
                     user_chars += chars
+                    if user_turns >= 2:
+                        plain = _extract_plain_text(msg.get("content"))
+                        is_rep, zh_hit, en_hit, post_ab = classify_repair_turn(
+                            plain, after_abort=prev_assistant_aborted
+                        )
+                        if is_rep:
+                            repair_turns += 1
+                        if zh_hit:
+                            repair_cue_zh_turns += 1
+                        if en_hit:
+                            repair_cue_en_turns += 1
+                        if post_ab:
+                            post_abort_followups += 1
+                    prev_assistant_aborted = False
                 elif role == "assistant":
                     assistant_turns += 1
                     assistant_chars += chars
@@ -158,6 +274,9 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                     last_stop_reason = stop_reason
                     if stop_reason in {"aborted", "error"}:
                         aborted = True
+                        prev_assistant_aborted = True
+                    else:
+                        prev_assistant_aborted = False
                     # Check whether final assistant message emitted non-empty text
                     content = msg.get("content")
                     if isinstance(content, str):
@@ -182,6 +301,7 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                     tool_result_chars += chars
                     tname = str(msg.get("toolName") or "unknown")
                     is_err = bool(msg.get("isError"))
+                    last_tool_is_error = is_err
                     if is_err:
                         tool_errors += 1
                     tool_stats[tname][0] += 1
@@ -196,6 +316,15 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
         and assistant_turns > 0
         and (last_role == "toolResult" or (last_role == "assistant" and last_stop_reason == "toolUse" and not last_assistant_has_text))
     )
+    # Completed session proxy (docs/program.md §2): final assistant turn emitted non-empty text
+    # and the final tool result was not an error (even if an earlier turn had an abort that was recovered).
+    completed = (
+        assistant_turns > 0
+        and last_role == "assistant"
+        and last_stop_reason not in {"aborted", "error"}
+        and last_assistant_has_text
+        and not last_tool_is_error
+    )
 
     return (
         SessionSummary(
@@ -207,6 +336,11 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
             tool_errors=tool_errors,
             aborted=aborted,
             premature_end=premature_end,
+            completed=completed,
+            repair_turns=repair_turns,
+            repair_cue_zh_turns=repair_cue_zh_turns,
+            repair_cue_en_turns=repair_cue_en_turns,
+            post_abort_followups=post_abort_followups,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             cache_read_tokens=cache_read_tokens,
@@ -299,6 +433,13 @@ def analyze_directory(
     tot_tool_errors = sum(s.tool_errors for s in sessions)
     tot_entries = sum(s.total_entries for s in sessions)
     tot_shaken = sum(s.shaken_entries for s in sessions)
+    completed_sessions = sum(1 for s in sessions if s.completed)
+    tot_repair_turns = sum(s.repair_turns for s in sessions)
+    repair_sessions = sum(1 for s in sessions if s.repair_turns > 0)
+    tot_zh_cues = sum(s.repair_cue_zh_turns for s in sessions)
+    tot_en_cues = sum(s.repair_cue_en_turns for s in sessions)
+    tot_post_abort = sum(s.post_abort_followups for s in sessions)
+    tot_followup_user_turns = sum(max(0, s.user_turns - 1) for s in sessions)
 
     # Per-session ratios for bootstrap CIs
     tool_char_shares = [
@@ -382,6 +523,8 @@ def analyze_directory(
             "abort_rate": round(sum(1 for s in sessions if s.aborted) / n, 4) if n else 0.0,
             "premature_end": sum(1 for s in sessions if s.premature_end),
             "premature_end_rate": round(sum(1 for s in sessions if s.premature_end) / n, 4) if n else 0.0,
+            "completed": completed_sessions,
+            "completion_rate": round(completed_sessions / n, 4) if n else 0.0,
             "large_over_5mb": sum(1 for s in sessions if s.file_bytes > 5_000_000),
             "turns_p50": round(percentile(turns, 0.5), 1),
             "turns_p90": round(percentile(turns, 0.9), 1),
@@ -403,6 +546,7 @@ def analyze_directory(
         "tokens_and_cache": {
             "total_prompt_tokens": tot_prompt_tokens,
             "total_output_tokens": tot_out,
+            "prompt_tokens_per_completed_session": round(tot_prompt_tokens / completed_sessions, 1) if completed_sessions else 0.0,
             "pooled_cache_hit_rate": round(tot_cr / tot_prompt_tokens, 4) if tot_prompt_tokens else 0.0,
             "session_cache_hit_mean": round(ch_mean, 4),
             "session_cache_hit_ci95": [round(ch_lo, 4), round(ch_hi, 4)],
@@ -412,6 +556,18 @@ def analyze_directory(
             "multi_digest_sessions": len(drifted_cache),
             "multi_digest_cache_mean": round(dr_mean, 4),
             "multi_digest_cache_ci95": [round(dr_lo, 4), round(dr_hi, 4)],
+        },
+        "friction": {
+            "calibration_status": "uncalibrated_heuristic",
+            "repair_turns_total": tot_repair_turns,
+            "followup_user_turns": tot_followup_user_turns,
+            "repair_turn_rate": round(tot_repair_turns / tot_followup_user_turns, 4) if tot_followup_user_turns else 0.0,
+            "repair_sessions": repair_sessions,
+            "repair_session_rate": round(repair_sessions / n, 4) if n else 0.0,
+            "repair_turns_per_completed_session": round(tot_repair_turns / completed_sessions, 4) if completed_sessions else 0.0,
+            "zh_cue_turns": tot_zh_cues,
+            "en_cue_turns": tot_en_cues,
+            "post_abort_followups": tot_post_abort,
         },
         "tools": {
             "total_calls": tot_tool_calls,
@@ -436,17 +592,19 @@ def render_markdown(report: dict[str, Any]) -> str:
     c = report["context_composition"]
     t = report["tokens_and_cache"]
     tl = report["tools"]
+    fr = report["friction"]
     st = report["stratification"]
 
     lines = [
         "## Trace Telemetry Summary",
         "",
         f"- **Window:** `{w['first_date']}` to `{w['last_date']}` (`min_turns={w['min_turns']}`)",
-        f"- **Sessions analyzed:** `{s['total']}` (named project `{s['total'] - s['private_tmp']}`, `--private-tmp--` `{s['private_tmp']}` / `{s['private_tmp_share']*100:.1f}%`)",
+        f"- **Sessions analyzed:** `{s['total']}` (completed `{s['completed']}` / `{s['completion_rate']*100:.1f}%`; named project `{s['total'] - s['private_tmp']}`, `--private-tmp--` `{s['private_tmp']}` / `{s['private_tmp_share']*100:.1f}%`)",
         f"- **Assistant turns:** P50 `{s['turns_p50']}` / P90 `{s['turns_p90']}` / P99 `{s['turns_p99']}` (sessions > 5 MB: `{s['large_over_5mb']}`)",
         f"- **Context byte share (pooled):** tool outputs `{c['tool_result_char_share_pooled']*100:.1f}%`, assistant `{c['assistant_char_share']*100:.1f}%`, user `{c['user_char_share']*100:.1f}%` (per-session tool share `{c['tool_result_char_share_session_mean']*100:.1f}%`, 95% CI `[{c['tool_result_char_share_ci95'][0]*100:.1f}%, {c['tool_result_char_share_ci95'][1]*100:.1f}%]`)",
-        f"- **Prompt cache hit rate (pooled):** `{t['pooled_cache_hit_rate']*100:.2f}%` across `{t['total_prompt_tokens']:,}` prompt tokens (per-session mean `{t['session_cache_hit_mean']*100:.1f}%`, 95% CI `[{t['session_cache_hit_ci95'][0]*100:.1f}%, {t['session_cache_hit_ci95'][1]*100:.1f}%]`)",
+        f"- **Prompt cache hit rate (pooled):** `{t['pooled_cache_hit_rate']*100:.2f}%` across `{t['total_prompt_tokens']:,}` prompt tokens (`{t['prompt_tokens_per_completed_session']:,.1f}` prompt tokens / completed session; per-session mean `{t['session_cache_hit_mean']*100:.1f}%`, 95% CI `[{t['session_cache_hit_ci95'][0]*100:.1f}%, {t['session_cache_hit_ci95'][1]*100:.1f}%]`)",
         f"- **Tool surface:** `{tl['total_calls']:,}` calls, `{tl['total_errors']:,}` errors (`{tl['pooled_error_rate']*100:.2f}%` pooled)",
+        f"- **Human–agent friction (`{fr['calibration_status']}`):** `{fr['repair_turns_total']}` repair turns across `{fr['repair_sessions']}` sessions (`{fr['repair_turns_per_completed_session']:.2f}` / completed session; ZH cues `{fr['zh_cue_turns']}`, EN cues `{fr['en_cue_turns']}`, post-abort `{fr['post_abort_followups']}`)",
         "",
         "### Stratification (Heavy >=10 turns vs Short <10 turns)",
         "",

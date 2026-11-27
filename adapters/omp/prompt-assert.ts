@@ -30,7 +30,6 @@ export default function promptAssert(pi: ExtensionAPI): void {
 		const checks: [string, boolean][] = [
 			["rule1-doubt-them", rule1Delivered],
 			["rule2-add-avoidable", rule2Delivered],
-			["rule4-devices-not-functions", s.includes("Devices are not functions")],
 			// INC-0006 fix: require positive replacement witness before asserting old reminder absence
 			["spr-direct-edit", sprWitnessOk && !s.includes("omp-config/system-prompt-replace")],
 			["model-delta", s.includes("文件检查只用 `read`/`grep`/`glob`")],

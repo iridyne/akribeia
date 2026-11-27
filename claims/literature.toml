@@ -159,3 +159,13 @@ source = "Horvitz 1999, Principles of Mixed-Initiative User Interfaces"
 url = "https://doi.org/10.1145/302979.303030"
 scope = "HCI principles; pre-LLM but mechanism-level"
 notes = "Grounds the automation boundary: collect and draft automatically, accept changes through a PR."
+
+[[claim]]
+id = "LIT-017"
+statement = "Automated outer-loop harness optimization requires uncompressed filesystem access to prior candidate code and raw execution traces rather than compressed scalar summaries alone."
+status = "supported"
+confidence = "high"
+source = "Lee, Khattab, Finn et al. 2026, Meta-Harness: End-to-End Optimization of Model Harnesses"
+url = "https://arxiv.org/abs/2603.28052"
+scope = "outer-loop harness search across text classification, retrieval-augmented math reasoning, and TerminalBench"
+notes = "Adopts uncompressed trace-and-ledger inspection on disk. Akribeia supplies the missing production brakes for human-in-the-loop Meta-Harness iteration: wire-payload delivery & anti-vacuous gates (H-015), N-of-1 serial-dependence control (H-014), and human acceptance sovereignty (LIT-016, D-014)."

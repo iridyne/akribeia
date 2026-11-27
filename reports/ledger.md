@@ -3,7 +3,7 @@
 Generated from `claims/`, `mapping/`, `experiments/`, and `incidents/` by `scripts/report.py`.
 Do not edit by hand. Run `python3 scripts/report.py --write`.
 
-**Coverage:** 24/24 changes mapped to a claim (100%).
+**Coverage:** 27/27 changes mapped to a claim (100%).
 
 ## Literature claims
 
@@ -25,6 +25,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | LIT-014 | supported | Longer context does not guarantee access to the relevant information; models attend unevenly across positions, with middle content often underused. | Liu et al. 2024, Lost in the Middle |
 | LIT-015 | supported | Prompts and pipeline instructions can be optimized programmatically against a metric, but the result needs a held-out validation set and is vulnerable to overfitting. | Khattab et al. 2023, DSPy |
 | LIT-016 | supported | Mixed-initiative interfaces work best when the human specifies goals and constraints, and the system infers when to act, confirm, or defer. | Horvitz 1999, Principles of Mixed-Initiative User Interfaces |
+| LIT-017 | supported | Automated outer-loop harness optimization requires uncompressed filesystem access to prior candidate code and raw execution traces rather than compressed scalar summaries alone. | Lee, Khattab, Finn et al. 2026, Meta-Harness: End-to-End Optimization of Model Harnesses |
 
 ## Local hypotheses
 
@@ -94,6 +95,9 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | M-022 | scripts/akribeia.py, pyproject.toml, scripts/audit.py | decision | D-013 |  |
 | M-023 | examples/demo-payloads/anthropic_dead_extension.json | justified | D-013, H-015 | EXP-0017 |
 | M-024 | AGENTS.md:13, CONTRIBUTING.md:33, docs/method.md:23, docs/program.md:67 | decision | D-014 |  |
+| M-025 | live OMP 19.2.1 harness (config.yml, mcp.json, models.yml, extensions) | decision | D-001, D-002, D-006, D-008 |  |
+| M-026 | adapters/omp/prompt-assert.ts, scripts/payload_gate.py, scripts/analyze_traces.py, contracts/example-harness-contract.toml | decision | D-010, D-012, D-013 |  |
+| M-027 | claims/literature.toml, docs/prior-art.md, README.md | decision | D-012, D-013, LIT-017 |  |
 
 ## Experiments
 

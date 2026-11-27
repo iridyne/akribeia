@@ -37,10 +37,11 @@ The playground is one person. Between-subject statistics do not apply. The relev
 
 Takeaway: "before vs after" is the weakest design. Use ABAB or a randomized alternating schedule when the intervention can be toggled; otherwise say explicitly that the design is quasi-experimental and cannot attribute causality.
 
-## 4. Prompt and rule optimization
+## 4. Prompt, rule, and harness optimization
 
 | Source | Pattern worth stealing | Verdict |
 |---|---|---|
+| **Meta-Harness** (Lee, Khattab, Finn et al., 2026) | Coding-agent proposer inspecting a filesystem of complete candidate harness source, scores, and raw execution traces instead of scalar summaries | **Adopt trace transparency; add production brakes.** Automated outer-loop search still assumes clean delivery and static i.i.d. benchmarks. Akribeia pairs uncompressed trace/ledger inspection with wire-delivery & anti-vacuous gates (`H-015`), N-of-1 randomization (`H-014`), and human-owned acceptance (`D-014`). |
 | **DSPy / GEPA** | Reflective prompt evolution from execution traces; Pareto front over candidates; a validation set; a separate reflection model. | **Defer to phase 2.** Our weekly reviewer can propose one edit; a full evolutionary optimizer needs a stable metric and a held-out set first. GEPA is the leading candidate when the eval set is large enough. |
 | **OpenEvolve** | Evolutionary program search with an archive and a fitness function. | **Candidate for rule search**, not for acceptance. The same rule applies: no promotion without held-out evidence. |
 | **Promptbreeder / OPRO** | Population-based prompt mutation. | **Not now.** They optimize against a metric; with 20 sessions, the metric is too noisy. |
@@ -78,6 +79,7 @@ The review changed five things:
 - QuantifyMe — <https://www.mdpi.com/1424-8220/18/4/1097>
 - StudyMe — <https://doi.org/10.1186/s13063-022-06893-7>
 - nof1kit — <https://haomeng797-ship-it.github.io/nof1kit/>
+- Meta-Harness — <https://arxiv.org/abs/2603.28052>
 - GEPA — <https://github.com/gepa-ai/gepa>
 - DSPy GEPA — <https://dspy.ai/current/diving-deeper/gepa-in-depth/>
 - OpenEvolve — <https://github.com/algorithmicsuperintelligence/openevolve>

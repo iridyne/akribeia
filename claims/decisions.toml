@@ -8,7 +8,7 @@ confidence = "high"
 source = "owner decision"
 url = ""
 scope = "this deployment"
-notes = "Profiles multiply the harness record and make comparisons ambiguous."
+notes = "Profiles multiply the harness record and make comparisons ambiguous. Project-scoped external MCP mounts in a single repo's gitignored .omp/mcp.json are exempt from global duplication and logged as trace covariates rather than profile forks (refined 2026-11-26)."
 
 [[claim]]
 id = "D-002"

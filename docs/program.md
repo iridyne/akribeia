@@ -19,9 +19,9 @@ Two consequences shape everything below:
 |---|---|---|---|---|
 | Effectiveness | Did the turn end with the task done? | `premature_end_rate`, `abort_rate` | `analyze_traces.py` | measured |
 | Human–agent friction | How often does the human have to re-steer? | tool error rate (pooled + per tool) | `analyze_traces.py` | measured |
-| Human–agent friction | …per unit of finished work | repair turns per completed session | — | **planned** |
+| Human–agent friction | …per unit of finished work | repair turns per completed session (`uncalibrated_heuristic`, ZH/EN + post-abort) | `analyze_traces.py` | **in progress** (awaiting ≥20-incident R4 calibration) |
 | Token efficiency | Work produced per prompt token | prompt-cache hit rate, tool-output char share | `analyze_traces.py` | measured |
-| Token efficiency | …per unit of finished work | prompt tokens per completed session | — | **planned** |
+| Token efficiency | …per unit of finished work | prompt tokens per completed session | `analyze_traces.py` | measured (proxy) |
 | Verification cost | What does the checking itself cost? | gate wall-clock, audit wall-clock, CI minutes | — | **planned** |
 
 Definitions that matter when reading the numbers:
@@ -82,7 +82,7 @@ Status is either **done** (verifiable in this repository now), **in progress**, 
 | E3 | A failing fixture next to every passing one, runnable by hand | `examples/demo-payloads/anthropic_dead_extension.json` exits 1 with a blocked vacuous pass | done |
 | E4 | `[CC]` and Codex read-only adapters: parse their local JSONL logs into the analyzer's schema | adapter fixture parses a real-format log and yields non-zero sessions | planned |
 | E5 | Local read-only capture of the real wire payload for `[CC]` / Codex (stdlib `http.server` proxy) | a captured payload passes `payload_gate.py` on a good config and fails on a missing rule | planned |
-| E6 | Built-in detector pack: cache-prefix drift, vacuous negative assertion, **MCP tool-schema budget gate**, skill lazy-load check | each detector has one fixture that fails and one that passes | planned |
+| E6 | Built-in detector pack: cache-prefix drift, vacuous negative assertion, **MCP tool-schema budget gate**, skill lazy-load check | each detector has one fixture that fails and one that passes | in progress (cache-prefix drift, vacuous negative assertion, and MCP tool-schema budget gate done with `anthropic_mcp_bloat.json`; skill lazy-load check remaining) |
 
 E6 is the one with the clearest everyday payoff: an MCP server that ships forty tool schemas eats context before the first token of work, and nothing currently measures that.
 
@@ -93,7 +93,7 @@ E6 is the one with the clearest everyday payoff: an MCP server that ships forty 
 | R1 | Randomized harness switcher: seeded alternating A/B of one toggle, sessions auto-labeled, paired permutation test at the end, report written to `experiments/` | a dry run over synthetic sessions reproduces the `nof1_power.py` false-positive/power figures | planned |
 | R2 | Cross-agent, cross-model desensitized comparison reports (same metric set: tool error rate, cache hit rate, context-growth slope, abort rate) | one report per comparison, each with a rerun script and synthetic fixture | planned |
 | R3 | Continuous falsification register: every popular configuration tested here that showed no gain, kept with its design and result | each entry has an experiment ID and a falsifier | in progress (the ledger already keeps refutations; the register is the reader-facing view) |
-| R4 | Friction metric validation: does a text-heuristic repair-turn count agree with human labels on ≥20 incidents? | agreement statistic reported; below threshold the metric stays uncalibrated | planned |
+| R4 | Friction metric validation: does a text-heuristic repair-turn count agree with human labels on ≥20 incidents? | agreement statistic reported; below threshold the metric stays uncalibrated | in progress (bilingual ZH/EN + post-abort detector and Cohen's κ calibration helper in `analyze_traces.py`; awaiting ≥20 human-labeled incidents) |
 | R5 | Token-efficiency frontier: plot harness variants on (tokens per completed session, effectiveness) instead of one score | frontier reported for at least three variants | planned |
 
 ## 6. Deliberately deferred

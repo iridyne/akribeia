@@ -8,6 +8,12 @@ fatal_patterns = [
   "Cannot find module",
 ]
 
+[tool_budget]
+max_total_tools = 40
+max_mcp_tools = 25
+max_per_server_tools = 20
+max_tools_chars = 16000
+
 [[assertion]]
 id = "rule-closure"
 kind = "must_contain"

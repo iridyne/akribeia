@@ -240,3 +240,33 @@ claims = ["D-014"]
 status = "decision"
 evidence = ""
 notes = "The audit and claim mapping are the review. Multiple maintainers would restore the PR gate."
+
+[[change]]
+id = "M-025"
+date = "2026-11-26"
+target = "live OMP 19.2.1 harness (config.yml, mcp.json, models.yml, extensions)"
+value = "Exploratory baseline reset on OMP 19.2.1: remove shadowed legacy binary and typo model alias, archive tool-policy-nag in favor of refined bashInterceptor.patterns + delete-guard (preserving temp exemption), scope 171-tool external MCP to its single project, set edit.mode=hashline, upgrade omp-sessions to 0.3.0, and adopt deterministic 1.3.0 guards plus model-compaction (150k) and user-prompt-inject. Empirical falsification: tool-topics increased Turn-1 payload by +6.9 KB to +9.7 KB on 19.2.1 and was rolled back."
+claims = ["D-001", "D-002", "D-006", "D-008"]
+status = "decision"
+evidence = ""
+notes = "Bundled exploratory baseline reset per D-008; cannot promote causal claims without follow-on single-variable experiments. Zero interactive LLM judges added."
+
+[[change]]
+id = "M-026"
+date = "2026-11-26"
+target = "adapters/omp/prompt-assert.ts, scripts/payload_gate.py, scripts/analyze_traces.py, contracts/example-harness-contract.toml"
+value = "Remove retired rule4-devices-not-functions probe check (deleted in OMP 19.1.1), add E6 MCP tool-schema budget gate with passing/failing fixtures, and add R4 bilingual (ZH/EN + post-abort) repair-turn heuristic + Cohen's kappa calibration helper to analyze_traces.py."
+claims = ["D-010", "D-012", "D-013"]
+status = "decision"
+evidence = ""
+notes = "Zero runtime dependencies; repair-turn counts stay explicitly labeled uncalibrated_heuristic until validated on >=20 human-labeled incidents."
+
+[[change]]
+id = "M-027"
+date = "2026-11-27"
+target = "claims/literature.toml, docs/prior-art.md, README.md"
+value = "Add LIT-017 (Meta-Harness, arXiv:2603.28052), benchmark outer-loop trace search against Akribeia's production delivery/N-of-1/human-sovereignty gates, and surface CI/E6/R4 status in README.md."
+claims = ["D-012", "D-013", "LIT-017"]
+status = "decision"
+evidence = ""
+notes = "Clarifies Akribeia's Meta-Harness positioning without altering runtime behavior."

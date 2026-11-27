@@ -33,6 +33,15 @@ from typing import Any
 
 VALID_SCOPES = {"system", "developer", "user", "tools", "any"}
 VALID_KINDS = {"must_contain", "must_regex", "must_not_contain", "tool_present", "tool_absent"}
+VALID_TOOL_BUDGET_INT_KEYS = {
+    "max_total_tools",
+    "max_mcp_tools",
+    "max_per_server_tools",
+    "max_tools_chars",
+    "max_system_chars",
+}
+MCP_TOOL_RE = re.compile(r"^mcp__(?P<server>[A-Za-z0-9-]+?)(?:__|_)([A-Za-z0-9_.-]+)$")
+MCP_PROMPT_REF_RE = re.compile(r"\bmcp__(?P<server>[A-Za-z0-9-]+?)(?:__|_)([A-Za-z0-9_.-]+)\b")
 
 
 @dataclass(frozen=True)
@@ -42,6 +51,9 @@ class NormalizedPayload:
     developer_text: str
     user_text: str
     tool_names: tuple[str, ...]
+    tools_chars: int
+    mcp_tool_counts: tuple[tuple[str, int], ...]
+    prompt_mcp_tool_counts: tuple[tuple[str, int], ...]
     raw_json: str
 
     @property
@@ -89,6 +101,30 @@ def _extract_tool_names(raw: dict[str, Any]) -> list[str]:
     return sorted(set(names))
 
 
+def _extract_mcp_counts(names: list[str]) -> tuple[tuple[str, int], ...]:
+    counts: dict[str, int] = {}
+    for name in sorted(set(names)):
+        match = MCP_TOOL_RE.match(name)
+        if not match:
+            continue
+        server = match.group("server")
+        counts[server] = counts.get(server, 0) + 1
+    return tuple(sorted(counts.items()))
+
+
+def _extract_prompt_mcp_counts(text: str) -> tuple[tuple[str, int], ...]:
+    seen_tools: set[str] = set()
+    counts: dict[str, int] = {}
+    for match in MCP_PROMPT_REF_RE.finditer(text):
+        full = match.group(0)
+        if full in seen_tools:
+            continue
+        seen_tools.add(full)
+        server = match.group("server")
+        counts[server] = counts.get(server, 0) + 1
+    return tuple(sorted(counts.items()))
+
+
 def normalize_payload(raw: dict[str, Any]) -> NormalizedPayload:
     """Normalize OpenAI, Anthropic, or generic/OMP provider payloads."""
     system_parts: list[str] = []
@@ -130,12 +166,22 @@ def normalize_payload(raw: dict[str, Any]) -> NormalizedPayload:
             elif role == "user":
                 user_parts.append(text)
 
+    system_text = "\n\n".join(system_parts)
+    developer_text = "\n\n".join(developer_parts)
+    tool_names = _extract_tool_names(raw)
+    tools_raw = raw.get("tools")
+    tools_chars = len(json.dumps(tools_raw, ensure_ascii=False, sort_keys=True)) if isinstance(tools_raw, list) else 0
+    prompt_mcp_counts = _extract_prompt_mcp_counts(f"{system_text}\n{developer_text}")
+
     return NormalizedPayload(
         provider=provider,
-        system_text="\n\n".join(system_parts),
-        developer_text="\n\n".join(developer_parts),
+        system_text=system_text,
+        developer_text=developer_text,
         user_text="\n\n".join(user_parts),
-        tool_names=tuple(_extract_tool_names(raw)),
+        tool_names=tuple(tool_names),
+        tools_chars=tools_chars,
+        mcp_tool_counts=_extract_mcp_counts(tool_names),
+        prompt_mcp_tool_counts=prompt_mcp_counts,
         raw_json=json.dumps(raw, ensure_ascii=False, sort_keys=True),
     )
 
@@ -194,6 +240,20 @@ def validate_contract_schema(contract: dict[str, Any]) -> list[str]:
                     f"{aid}: requires_witness {witness!r} must be a positive assertion "
                     "(must_contain / must_regex / tool_present)"
                 )
+    tool_budget = contract.get("tool_budget")
+    if tool_budget is not None:
+        if not isinstance(tool_budget, dict):
+            errors.append("tool_budget: must be a table")
+        else:
+            for key, val in tool_budget.items():
+                if key == "count_prompt_mcp_refs":
+                    if not isinstance(val, bool):
+                        errors.append("tool_budget.count_prompt_mcp_refs: must be boolean")
+                elif key in VALID_TOOL_BUDGET_INT_KEYS:
+                    if isinstance(val, bool) or not isinstance(val, int) or val < 0:
+                        errors.append(f"tool_budget.{key}: must be a non-negative integer")
+                else:
+                    errors.append(f"tool_budget.{key}: unknown key")
     return errors
 
 
@@ -228,6 +288,7 @@ def evaluate_contract(
             "results": [],
             "log_failures": [],
             "cache_check": None,
+            "tool_budget_check": None,
         }
 
     # 1. Startup / extension log gate (INC-0005)
@@ -306,9 +367,58 @@ def evaluate_contract(
             "stable": matched,
         }
 
+    # 4. E6 MCP & tool-schema budget gate
+    tool_budget_check: dict[str, Any] | None = None
+    tb_cfg = contract.get("tool_budget")
+    if isinstance(tb_cfg, dict) and tb_cfg:
+        count_prompt_mcp = bool(tb_cfg.get("count_prompt_mcp_refs", True))
+        by_server: dict[str, int] = dict(payload.mcp_tool_counts)
+        if count_prompt_mcp:
+            for server, cnt in payload.prompt_mcp_tool_counts:
+                by_server[server] = max(by_server.get(server, 0), cnt)
+        mcp_tools_total = sum(by_server.values())
+        # If MCP tools were mounted only in prompt text (not in tools[]), include them in effective total
+        tools_array_mcp = sum(cnt for _, cnt in payload.mcp_tool_counts)
+        effective_total_tools = len(payload.tool_names) + max(0, mcp_tools_total - tools_array_mcp)
+        violations: list[str] = []
+
+        if "max_total_tools" in tb_cfg and effective_total_tools > tb_cfg["max_total_tools"]:
+            violations.append(
+                f"total_tools={effective_total_tools} exceeds max_total_tools={tb_cfg['max_total_tools']}"
+            )
+        if "max_mcp_tools" in tb_cfg and mcp_tools_total > tb_cfg["max_mcp_tools"]:
+            violations.append(
+                f"mcp_tools={mcp_tools_total} exceeds max_mcp_tools={tb_cfg['max_mcp_tools']}"
+            )
+        if "max_per_server_tools" in tb_cfg:
+            cap = tb_cfg["max_per_server_tools"]
+            for server, cnt in sorted(by_server.items()):
+                if cnt > cap:
+                    violations.append(
+                        f"mcp server {server!r} mounts {cnt} tools (exceeds max_per_server_tools={cap})"
+                    )
+        if "max_tools_chars" in tb_cfg and payload.tools_chars > tb_cfg["max_tools_chars"]:
+            violations.append(
+                f"tools_chars={payload.tools_chars} exceeds max_tools_chars={tb_cfg['max_tools_chars']}"
+            )
+        if "max_system_chars" in tb_cfg and len(payload.system_text) > tb_cfg["max_system_chars"]:
+            violations.append(
+                f"system_chars={len(payload.system_text)} exceeds max_system_chars={tb_cfg['max_system_chars']}"
+            )
+        tool_budget_check = {
+            "ok": not violations,
+            "total_tools": effective_total_tools,
+            "mcp_tools": mcp_tools_total,
+            "tools_chars": payload.tools_chars,
+            "system_chars": len(payload.system_text),
+            "by_server": by_server,
+            "violations": violations,
+        }
+
     all_assertions_ok = all(r["passed"] for r in results)
     cache_ok = True if cache_check is None else bool(cache_check["stable"])
-    ok = all_assertions_ok and cache_ok and not log_failures
+    budget_ok = True if tool_budget_check is None else bool(tool_budget_check["ok"])
+    ok = all_assertions_ok and cache_ok and budget_ok and not log_failures
 
     return {
         "ok": ok,
@@ -321,6 +431,7 @@ def evaluate_contract(
         "results": results,
         "log_failures": log_failures,
         "cache_check": cache_check,
+        "tool_budget_check": tool_budget_check,
     }
 
 
@@ -418,7 +529,38 @@ def selftest() -> int:
         print(f"selftest FAIL: fatal extension load log did not fail gate: {r5}", file=sys.stderr)
         return 1
 
-    print("payload_gate selftest OK (5/5 oracle checks passed)")
+    # E6 MCP tool-schema budget gate check
+    budget_contract = {
+        **contract_valid,
+        "tool_budget": {
+            "max_total_tools": 40,
+            "max_mcp_tools": 25,
+            "max_per_server_tools": 20,
+            "max_tools_chars": 16000,
+        },
+    }
+    bloated_tools = [{"name": "read", "input_schema": {"type": "object"}}] + [
+        {
+            "name": f"mcp__chatops__action_{i:02d}",
+            "description": "Synthetic MCP action schema for budget gate verification.",
+            "input_schema": {"type": "object", "properties": {"id": {"type": "string"}}},
+        }
+        for i in range(1, 31)
+    ]
+    bloated_payload = normalize_payload(
+        {
+            "model": "example-model",
+            "system": [{"type": "text", "text": "You are a coding agent. Never end a turn on raw tool output."}],
+            "messages": [{"role": "user", "content": "ping"}],
+            "tools": bloated_tools,
+        }
+    )
+    r6 = evaluate_contract(budget_contract, bloated_payload)
+    if r6["ok"] or not r6["tool_budget_check"] or r6["tool_budget_check"]["ok"]:
+        print(f"selftest FAIL: MCP tool-schema budget bloat was not rejected: {r6}", file=sys.stderr)
+        return 1
+
+    print("payload_gate selftest OK (6/6 oracle checks passed)")
     return 0
 
 
@@ -474,6 +616,15 @@ def main() -> int:
                 f"  [{mark}] prompt-cache prefix: actual={cc['actual_sha256'][:12]} "
                 f"expected={cc['expected_sha256'][:12]}"
             )
+        if report.get("tool_budget_check") is not None:
+            tb = report["tool_budget_check"]
+            mark = "OK" if tb["ok"] else "OVER"
+            print(
+                f"  [{mark}] tool-budget: total={tb['total_tools']} mcp={tb['mcp_tools']} "
+                f"tools_chars={tb['tools_chars']} servers={tb['by_server']}"
+            )
+            for violation in tb["violations"]:
+                print(f"    BUDGET VIOLATION: {violation}")
 
     return 0 if report["ok"] else 1
 

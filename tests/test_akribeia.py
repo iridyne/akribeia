@@ -125,6 +125,42 @@ class TestPayloadGate(unittest.TestCase):
         self.assertFalse(res["ok"])
         self.assertEqual(len(res["log_failures"]), 1)
 
+    def test_mcp_bloat_fixture_rejected_by_tool_budget(self) -> None:
+        raw = json.loads(
+            (ROOT / "examples" / "demo-payloads" / "anthropic_mcp_bloat.json").read_text(encoding="utf-8")
+        )
+        res = payload_gate.evaluate_contract(self.contract, payload_gate.normalize_payload(raw))
+        self.assertFalse(res["ok"])
+        tb = res["tool_budget_check"]
+        self.assertIsNotNone(tb)
+        self.assertFalse(tb["ok"])
+        self.assertEqual(tb["mcp_tools"], 30)
+        self.assertEqual(tb["by_server"], {"chatops": 30})
+        self.assertTrue(any("chatops" in v for v in tb["violations"]))
+
+    def test_prompt_mounted_mcp_bloat_rejected(self) -> None:
+        lines = [f"- mcp__chatops_tool_{i:02d}: synthetic mounted command" for i in range(1, 26)]
+        raw = {
+            "model": "example-model",
+            "system": [
+                {
+                    "type": "text",
+                    "text": (
+                        "Never end a turn on raw tool output.\n"
+                        "Use the sanctioned read escalation path instead of eval open().\n"
+                        + "\n".join(lines)
+                    ),
+                }
+            ],
+            "messages": [{"role": "user", "content": "ping"}],
+            "tools": [{"name": "read", "input_schema": {"type": "object"}}],
+        }
+        res = payload_gate.evaluate_contract(self.contract, payload_gate.normalize_payload(raw))
+        self.assertFalse(res["ok"])
+        tb = res["tool_budget_check"]
+        self.assertFalse(tb["ok"])
+        self.assertEqual(tb["by_server"].get("chatops"), 25)
+
 
 class TestCli(unittest.TestCase):
     def test_help_lists_every_command(self) -> None:
@@ -145,17 +181,39 @@ class TestCli(unittest.TestCase):
 class TestAnalyzeTraces(unittest.TestCase):
     def test_demo_sessions_analysis(self) -> None:
         rep = analyze_traces.analyze_directory(ROOT / "examples" / "demo-sessions", seed=42)
-        self.assertEqual(rep["sessions"]["total"], 2)
+        self.assertEqual(rep["sessions"]["total"], 3)
         self.assertEqual(rep["sessions"]["private_tmp"], 1)
-        self.assertEqual(rep["tools"]["total_calls"], 3)
+        self.assertEqual(rep["sessions"]["completed"], 3)
+        self.assertEqual(rep["tools"]["total_calls"], 4)
         self.assertEqual(rep["tools"]["total_errors"], 1)
-        # Single-digest session_001 has higher cache hit rate than drifted session_002
+        # Single-digest sessions have higher cache hit rate than drifted session_002
         tc = rep["tokens_and_cache"]
-        self.assertEqual(tc["single_digest_sessions"], 1)
+        self.assertEqual(tc["single_digest_sessions"], 2)
         self.assertEqual(tc["multi_digest_sessions"], 1)
         self.assertGreater(tc["single_digest_cache_mean"], tc["multi_digest_cache_mean"])
+        self.assertGreater(tc["prompt_tokens_per_completed_session"], 0)
+        # R4 bilingual + post-abort repair-turn heuristic
+        fr = rep["friction"]
+        self.assertEqual(fr["calibration_status"], "uncalibrated_heuristic")
+        self.assertEqual(fr["repair_turns_total"], 1)
+        self.assertEqual(fr["repair_sessions"], 1)
+        self.assertEqual(fr["zh_cue_turns"], 1)
+        self.assertEqual(fr["post_abort_followups"], 1)
         md = analyze_traces.render_markdown(rep)
         self.assertIn("## Trace Telemetry Summary", md)
+        self.assertIn("uncalibrated_heuristic", md)
+
+    def test_repair_calibration_metrics(self) -> None:
+        preds = [True] * 10 + [False] * 10
+        labels = [True] * 9 + [False] + [False] * 9 + [True]
+        cal = analyze_traces.evaluate_repair_calibration(preds, labels)
+        self.assertEqual(cal["n"], 20)
+        self.assertAlmostEqual(cal["agreement"], 0.9)
+        self.assertAlmostEqual(cal["cohen_kappa"], 0.8)
+        self.assertTrue(cal["calibrated"])
+        # Under-sampled (<20) must never report calibrated=True
+        small = analyze_traces.evaluate_repair_calibration([True, False], [True, False])
+        self.assertFalse(small["calibrated"])
 
 
 class TestNof1Power(unittest.TestCase):

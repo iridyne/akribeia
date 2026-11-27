@@ -1,7 +1,14 @@
 # Akribeia
 
-**Zero-dependency wire-payload gate, trace telemetry, and N-of-1 experiment rig for people who tune coding-agent harnesses.**
+[![validate](https://github.com/iridyne/akribeia/actions/workflows/validate.yml/badge.svg)](https://github.com/iridyne/akribeia/actions/workflows/validate.yml)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776ab)
+![Zero runtime dependencies](https://img.shields.io/badge/dependencies-zero%20runtime-16a34a)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
+
+**Zero-dependency wire-payload gate, trace telemetry, and N-of-1 experiment rig for people who tune coding-agent harnesses.**  
 *Every harness knob carries its proof.*
+
+> **Meta-Harness positioning (`arXiv:2603.28052`):** Automated outer-loop harness search (e.g., *Meta-Harness*) shows why agents need raw trace filesystems rather than scalar scores. **Akribeia focuses on the other half of post-ChatGPT human–AI co-construction**: deterministic wire-delivery & anti-vacuous gates (`INC-0005` / `INC-0006`), MCP tool-schema context budgets (`tool_budget`), N-of-1 serial-dependence control (`41.6% → 5.6%` false-positive reduction), and human-owned ledger falsification.
 
 ## Why this exists
 
@@ -104,8 +111,8 @@ The program, the metric definitions, and the phased roadmap live in [`docs/progr
 
 ## Core capabilities
 
-1. **Provider-Agnostic Wire-Payload Contract Gate (`scripts/payload_gate.py`)** — verifies serialized request payloads across **Anthropic Messages API**, **[OI] Chat / Responses API**, and **OMP**; detects system-prefix SHA-256 drift; and **mechanically rejects vacuous negative-only assertions** unless paired with a positive witness (`INC-0006`).
-2. **Privacy-Safe Heavy-Coding Trace Telemetry (`scripts/analyze_traces.py`)** — structural context shares, per-tool failure surfaces, prompt-cache hit rates, and deterministic bootstrap 95% CIs from local coding-agent JSONL traces, without ever committing raw prompts or paths.
+1. **Provider-Agnostic Wire-Payload Contract Gate (`scripts/payload_gate.py`)** — verifies serialized request payloads across **Anthropic Messages API**, **[OI] Chat / Responses API**, and **OMP**; detects system-prefix SHA-256 drift; enforces **MCP tool-schema budgets** (`tool_budget` caps on total/MCP/per-server tools and schema characters); and **mechanically rejects vacuous negative-only assertions** unless paired with a positive witness (`INC-0006`).
+2. **Privacy-Safe Heavy-Coding Trace Telemetry (`scripts/analyze_traces.py`)** — structural context shares, per-tool failure surfaces, prompt-cache hit rates, deterministic bootstrap 95% CIs, and bilingual (ZH/EN + post-abort) repair-turn detection with Cohen's κ calibration gating (`R4`) from local JSONL traces, without ever committing raw prompts or paths.
 3. **N-of-1 Autocorrelation & Power Simulator (`scripts/nof1_power.py`)** — quantifies single-developer serial-dependence false-positive inflation and compares `Before/After` vs. `ABAB` vs. `Randomized Alternating Paired Permutation`.
 4. **Evidence-Gated Ledger (`scripts/audit.py`, `scripts/report.py`)** — every harness intervention maps to a typed claim (`literature`, `hypothesis`, or `decision`), every hypothesis names a falsifier and stop rule, and secret/path hygiene is enforced fail-closed in CI.
 
@@ -150,6 +157,7 @@ The program, the metric definitions, and the phased roadmap live in [`docs/progr
 **Core literature anchors:**
 
 - Macedo (2026) *What makes a harness a harness* (`arXiv:2606.10106`) — necessary & sufficient conditions (`LIT-001`)
+- Lee, Khattab, Finn et al. (2026) *Meta-Harness: End-to-End Optimization of Model Harnesses* (`arXiv:2603.28052`) — uncompressed filesystem trace access for outer-loop search (`LIT-017`)
 - Gu (2026) *From Model Scaling to System Scaling: Scaling the Harness in Agentic AI* (`arXiv:2605.26112`) — six-factor framing & stale memory (`LIT-002`, `LIT-011`, `LIT-012`)
 - Raj et al. (2026) *Model or Harness? An Interaction-Centric Taxonomy for Localizing Agent Failures* (`arXiv:2607.28802`) — edge/fault localization (`LIT-007`)
 - Pan et al. (2026) *Natural-Language Agent Harnesses* (`arXiv:2603.25723`) — ablatable rule modules (`LIT-009`)
