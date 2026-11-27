@@ -58,6 +58,8 @@ python3 scripts/payload_gate.py \
 python3 scripts/akribeia.py gate   --contract contracts/example-harness-contract.toml \
                                    --payload examples/demo-payloads/anthropic_good.json
 python3 scripts/akribeia.py trace  examples/demo-sessions --markdown
+python3 scripts/akribeia.py trace  examples/demo-sessions-cc --markdown
+python3 scripts/akribeia.py trace  examples/demo-sessions-codex --markdown
 python3 scripts/akribeia.py power  --seed 42 --trials 200 --markdown
 python3 scripts/akribeia.py audit && python3 scripts/akribeia.py report --check
 
@@ -112,7 +114,7 @@ The program, the metric definitions, and the phased roadmap live in [`docs/progr
 ## Core capabilities
 
 1. **Provider-Agnostic Wire-Payload Contract Gate (`scripts/payload_gate.py`)** — verifies serialized request payloads across **Anthropic Messages API**, **[OI] Chat / Responses API**, and **OMP**; detects system-prefix SHA-256 drift; enforces **MCP tool-schema budgets** (`tool_budget` caps on total/MCP/per-server tools and schema characters); and **mechanically rejects vacuous negative-only assertions** unless paired with a positive witness (`INC-0006`).
-2. **Privacy-Safe Heavy-Coding Trace Telemetry (`scripts/analyze_traces.py`)** — structural context shares, per-tool failure surfaces, prompt-cache hit rates, deterministic bootstrap 95% CIs, and bilingual (ZH/EN + post-abort) repair-turn detection with Cohen's κ calibration gating (`R4`) from local JSONL traces, without ever committing raw prompts or paths.
+2. **Privacy-Safe Multi-Runtime Trace Telemetry (`scripts/analyze_traces.py`)** — auto-detects **OMP**, **Claude Code** (`~/.claude/projects`), and **OpenAI Codex CLI** (`~/.codex/sessions`) JSONL logs; extracts structural context shares, per-tool failure surfaces, prompt-cache hit rates, deterministic bootstrap 95% CIs, and bilingual (ZH/EN + post-abort) repair-turn detection with Cohen's κ calibration gating (`R4`), without ever committing raw prompts or paths.
 3. **N-of-1 Autocorrelation & Power Simulator (`scripts/nof1_power.py`)** — quantifies single-developer serial-dependence false-positive inflation and compares `Before/After` vs. `ABAB` vs. `Randomized Alternating Paired Permutation`.
 4. **Evidence-Gated Ledger (`scripts/audit.py`, `scripts/report.py`)** — every harness intervention maps to a typed claim (`literature`, `hypothesis`, or `decision`), every hypothesis names a falsifier and stop rule, and secret/path hygiene is enforced fail-closed in CI.
 

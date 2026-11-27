@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Privacy-safe session trace analyzer for Akribeia.
+"""Privacy-safe multi-runtime session trace analyzer for Akribeia.
 
-Computes structural telemetry from OMP-format JSONL coding-agent traces without
-ever emitting raw prompts, user text, repository names, secrets, or local paths.
+Computes structural telemetry from OMP, Claude Code (`~/.claude/projects`), and
+OpenAI Codex CLI (`~/.codex/sessions`) JSONL traces without ever emitting raw
+prompts, user text, repository names, secrets, or local paths.
 Supports deterministic bootstrap 95% confidence intervals (stdlib only).
 
 Usage:
     python3 scripts/analyze_traces.py examples/demo-sessions
-    python3 scripts/analyze_traces.py examples/demo-sessions --markdown
-    python3 scripts/analyze_traces.py ~/.omp/agent/sessions --since 2026-09-01 --markdown
+    python3 scripts/analyze_traces.py ~/.claude/projects --markdown
+    python3 scripts/analyze_traces.py ~/.codex/sessions --since 2026-09-01 --markdown
 """
 
 from __future__ import annotations
@@ -40,6 +41,7 @@ EN_REPAIR_CUES_RE = re.compile(
 @dataclass
 class SessionSummary:
     date: str
+    runtime: str
     is_private_tmp: bool
     user_turns: int
     assistant_turns: int
@@ -77,8 +79,9 @@ def _extract_plain_text(content: Any) -> str:
         for item in content:
             if isinstance(item, str):
                 parts.append(item)
-            elif isinstance(item, dict) and isinstance(item.get("text"), str):
-                parts.append(item["text"])
+            elif isinstance(item, dict) and item.get("type") in {None, "text", "input_text", "output_text"}:
+                if isinstance(item.get("text"), str):
+                    parts.append(item["text"])
         return "\n".join(parts)
     if isinstance(content, dict) and isinstance(content.get("text"), str):
         return content["text"]
@@ -162,6 +165,10 @@ def _content_chars(content: Any) -> int:
                     total += len(item["thinking"])
                 elif "arguments" in item:
                     total += len(str(item["arguments"]))
+                elif item.get("type") == "tool_use" and "input" in item:
+                    total += len(str(item["input"]))
+                elif item.get("type") == "tool_result" and "content" in item:
+                    total += _content_chars(item.get("content"))
         return total
     if isinstance(content, dict):
         return len(str(content))
@@ -174,8 +181,54 @@ def _extract_date(ts: Any) -> str:
     return ""
 
 
-def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, list[int]]]:
-    """Parse one JSONL session into aggregate metrics + per-tool [calls, errors, chars]."""
+def _is_tmp_cwd(cwd: Any) -> bool:
+    if not isinstance(cwd, str) or not cwd:
+        return False
+    return "/private/tmp" in cwd or cwd.startswith("/tmp")
+
+
+def _detect_trace_format(records: list[dict[str, Any]], requested: str = "auto") -> str:
+    if requested != "auto":
+        return requested
+    for obj in records:
+        etype = obj.get("type")
+        if etype in {"session", "custom", "custom_message"}:
+            return "omp"
+        if etype == "message" and isinstance(obj.get("message"), dict):
+            return "omp"
+        if etype in {"session_meta", "response_item", "event_msg"} and isinstance(obj.get("payload"), dict):
+            return "codex"
+        if etype in {"user", "assistant"} and isinstance(obj.get("message"), dict):
+            return "claude"
+    return "omp"
+
+
+def _codex_output_is_error(payload: dict[str, Any], output_val: Any) -> bool:
+    if payload.get("is_error") is True:
+        return True
+    text = output_val if isinstance(output_val, str) else json.dumps(output_val, ensure_ascii=False)
+    try:
+        parsed = json.loads(text) if isinstance(output_val, str) else output_val
+        if isinstance(parsed, dict):
+            meta = parsed.get("metadata")
+            if isinstance(meta, dict):
+                code = meta.get("exit_code")
+                if isinstance(code, int) and code != 0:
+                    return True
+    except (json.JSONDecodeError, TypeError):
+        pass
+    m = re.search(r"(?:Exit code|Process exited with code):\s*(-?\d+)", text)
+    if m and int(m.group(1)) != 0:
+        return True
+    return False
+
+
+def parse_session_file(
+    path: Path,
+    *,
+    fmt: str = "auto",
+) -> tuple[SessionSummary | None, dict[str, list[int]]]:
+    """Parse one OMP, Claude Code, or Codex CLI JSONL trace into aggregate metrics."""
     tool_stats: dict[str, list[int]] = collections.defaultdict(lambda: [0, 0, 0])
     session_date = ""
     is_private_tmp = "--private-tmp--" in path.parts
@@ -195,6 +248,8 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
     cache_read_tokens = 0
     cache_write_tokens = 0
     reasoning_tokens = 0
+    codex_last_usage_seen = False
+    codex_fallback_total_usage: dict[str, int] | None = None
     user_chars = 0
     assistant_chars = 0
     tool_result_chars = 0
@@ -204,12 +259,15 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
     last_role = ""
     last_stop_reason = ""
     last_assistant_has_text = False
+    tool_id_to_name: dict[str, str] = {}
+    codex_turn_has_assistant_msg = False
 
     try:
         file_bytes = path.stat().st_size
     except OSError:
         return None, {}
 
+    records: list[dict[str, Any]] = []
     with path.open("r", encoding="utf-8", errors="ignore") as handle:
         for line in handle:
             if not line.strip():
@@ -221,14 +279,59 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                 obj = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            if isinstance(obj, dict):
+                records.append(obj)
 
-            etype = obj.get("type")
-            if not session_date:
-                session_date = _extract_date(obj.get("timestamp"))
+    if not records:
+        return None, {}
 
+    detected = _detect_trace_format(records, requested=fmt)
+    runtime_name = {"omp": "omp", "claude": "claude_code", "codex": "codex"}.get(detected, detected)
+
+    def _record_user_turn(plain_text: str, chars: int) -> None:
+        nonlocal user_turns, user_chars, last_role, prev_assistant_aborted, codex_turn_has_assistant_msg
+        nonlocal repair_turns, repair_cue_zh_turns, repair_cue_en_turns, post_abort_followups
+        user_turns += 1
+        user_chars += chars
+        last_role = "user"
+        codex_turn_has_assistant_msg = False
+        if user_turns >= 2:
+            is_rep, zh_hit, en_hit, post_ab = classify_repair_turn(
+                plain_text, after_abort=prev_assistant_aborted
+            )
+            if is_rep:
+                repair_turns += 1
+            if zh_hit:
+                repair_cue_zh_turns += 1
+            if en_hit:
+                repair_cue_en_turns += 1
+            if post_ab:
+                post_abort_followups += 1
+        prev_assistant_aborted = False
+
+    def _record_tool_result(tname: str, is_err: bool, chars: int) -> None:
+        nonlocal tool_calls, tool_errors, tool_result_chars, last_role, last_tool_is_error, codex_turn_has_assistant_msg
+        tool_calls += 1
+        tool_result_chars += chars
+        last_role = "toolResult"
+        last_tool_is_error = is_err
+        codex_turn_has_assistant_msg = False
+        if is_err:
+            tool_errors += 1
+        tool_stats[tname][0] += 1
+        tool_stats[tname][1] += 1 if is_err else 0
+        tool_stats[tname][2] += chars
+
+    for obj in records:
+        etype = obj.get("type")
+        if not session_date:
+            session_date = _extract_date(obj.get("timestamp"))
+        if _is_tmp_cwd(obj.get("cwd")):
+            is_private_tmp = True
+
+        if detected == "omp":
             if etype == "session":
-                cwd = str(obj.get("cwd", ""))
-                if "/private/tmp" in cwd or cwd.startswith("/tmp"):
+                if _is_tmp_cwd(obj.get("cwd")):
                     is_private_tmp = True
                 if not session_date:
                     session_date = _extract_date(obj.get("timestamp"))
@@ -247,29 +350,14 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                 if not isinstance(msg, dict):
                     continue
                 role = str(msg.get("role", ""))
-                last_role = role
                 chars = _content_chars(msg.get("content"))
 
                 if role == "user":
-                    user_turns += 1
-                    user_chars += chars
-                    if user_turns >= 2:
-                        plain = _extract_plain_text(msg.get("content"))
-                        is_rep, zh_hit, en_hit, post_ab = classify_repair_turn(
-                            plain, after_abort=prev_assistant_aborted
-                        )
-                        if is_rep:
-                            repair_turns += 1
-                        if zh_hit:
-                            repair_cue_zh_turns += 1
-                        if en_hit:
-                            repair_cue_en_turns += 1
-                        if post_ab:
-                            post_abort_followups += 1
-                    prev_assistant_aborted = False
+                    _record_user_turn(_extract_plain_text(msg.get("content")), chars)
                 elif role == "assistant":
                     assistant_turns += 1
                     assistant_chars += chars
+                    last_role = "assistant"
                     stop_reason = str(msg.get("stopReason", ""))
                     last_stop_reason = stop_reason
                     if stop_reason in {"aborted", "error"}:
@@ -277,7 +365,6 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                         prev_assistant_aborted = True
                     else:
                         prev_assistant_aborted = False
-                    # Check whether final assistant message emitted non-empty text
                     content = msg.get("content")
                     if isinstance(content, str):
                         last_assistant_has_text = bool(content.strip())
@@ -297,16 +384,159 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
                         cache_write_tokens += int(usage.get("cacheWrite") or 0)
                         reasoning_tokens += int(usage.get("reasoningTokens") or 0)
                 elif role == "toolResult":
-                    tool_calls += 1
-                    tool_result_chars += chars
                     tname = str(msg.get("toolName") or "unknown")
-                    is_err = bool(msg.get("isError"))
-                    last_tool_is_error = is_err
-                    if is_err:
-                        tool_errors += 1
-                    tool_stats[tname][0] += 1
-                    tool_stats[tname][1] += 1 if is_err else 0
-                    tool_stats[tname][2] += chars
+                    _record_tool_result(tname, bool(msg.get("isError")), chars)
+
+        elif detected == "claude":
+            if obj.get("isSidechain") is True:
+                continue
+            if etype == "user":
+                if obj.get("isMeta") is True:
+                    continue
+                msg = obj.get("message")
+                if not isinstance(msg, dict):
+                    continue
+                content = msg.get("content")
+                if isinstance(content, list):
+                    tool_blocks = [b for b in content if isinstance(b, dict) and b.get("type") == "tool_result"]
+                    non_tool_blocks = [b for b in content if not (isinstance(b, dict) and b.get("type") == "tool_result")]
+                    for b in tool_blocks:
+                        tid = str(b.get("tool_use_id") or "")
+                        tname = tool_id_to_name.get(tid, "unknown")
+                        _record_tool_result(tname, bool(b.get("is_error")), _content_chars(b.get("content")))
+                    if non_tool_blocks:
+                        plain = _extract_plain_text(non_tool_blocks)
+                        if plain.strip():
+                            _record_user_turn(plain, _content_chars(non_tool_blocks))
+                else:
+                    plain = _extract_plain_text(content)
+                    if plain.strip():
+                        _record_user_turn(plain, _content_chars(content))
+            elif etype == "assistant":
+                msg = obj.get("message")
+                if not isinstance(msg, dict):
+                    continue
+                assistant_turns += 1
+                last_role = "assistant"
+                content = msg.get("content")
+                assistant_chars += _content_chars(content)
+                if isinstance(content, list):
+                    for b in content:
+                        if isinstance(b, dict) and b.get("type") == "tool_use":
+                            tid = str(b.get("id") or "")
+                            tname = str(b.get("name") or "unknown")
+                            if tid:
+                                tool_id_to_name[tid] = tname
+                    last_assistant_has_text = any(
+                        isinstance(b, dict) and b.get("type") == "text" and bool(str(b.get("text", "")).strip())
+                        for b in content
+                    )
+                elif isinstance(content, str):
+                    last_assistant_has_text = bool(content.strip())
+                else:
+                    last_assistant_has_text = False
+
+                raw_stop = str(msg.get("stop_reason") or msg.get("stopReason") or "")
+                stop_reason = "toolUse" if raw_stop == "tool_use" else raw_stop
+                last_stop_reason = stop_reason
+                if stop_reason in {"aborted", "error", "refusal"}:
+                    aborted = True
+                    prev_assistant_aborted = True
+                else:
+                    prev_assistant_aborted = False
+
+                usage = msg.get("usage")
+                if isinstance(usage, dict):
+                    input_tokens += int(usage.get("input_tokens") or usage.get("input") or 0)
+                    output_tokens += int(usage.get("output_tokens") or usage.get("output") or 0)
+                    cache_read_tokens += int(usage.get("cache_read_input_tokens") or usage.get("cacheRead") or 0)
+                    cache_write_tokens += int(usage.get("cache_creation_input_tokens") or usage.get("cacheWrite") or 0)
+
+        elif detected == "codex":
+            payload = obj.get("payload")
+            if not isinstance(payload, dict):
+                continue
+            if etype == "session_meta":
+                if _is_tmp_cwd(payload.get("cwd")):
+                    is_private_tmp = True
+                if not session_date:
+                    session_date = _extract_date(payload.get("timestamp"))
+            elif etype == "response_item":
+                ptype = payload.get("type")
+                if ptype == "message":
+                    role = str(payload.get("role", ""))
+                    content = payload.get("content")
+                    chars = _content_chars(content)
+                    if role == "user":
+                        plain = _extract_plain_text(content)
+                        if plain.strip():
+                            _record_user_turn(plain, chars)
+                    elif role == "assistant":
+                        assistant_turns += 1
+                        codex_turn_has_assistant_msg = True
+                        assistant_chars += chars
+                        last_role = "assistant"
+                        last_stop_reason = "stop"
+                        prev_assistant_aborted = False
+                        plain = _extract_plain_text(content)
+                        last_assistant_has_text = bool(plain.strip())
+                elif ptype in {"function_call", "custom_tool_call"}:
+                    if not codex_turn_has_assistant_msg:
+                        assistant_turns += 1
+                        codex_turn_has_assistant_msg = True
+                    last_role = "assistant"
+                    last_stop_reason = "toolUse"
+                    last_assistant_has_text = False
+                    prev_assistant_aborted = False
+                    cid = str(payload.get("call_id") or "")
+                    tname = str(payload.get("name") or "custom_tool")
+                    if cid:
+                        tool_id_to_name[cid] = tname
+                    arg_blob = payload.get("arguments") if "arguments" in payload else payload.get("input", "")
+                    assistant_chars += len(str(arg_blob))
+                elif ptype in {"function_call_output", "custom_tool_call_output"}:
+                    cid = str(payload.get("call_id") or "")
+                    tname = tool_id_to_name.get(cid, "unknown")
+                    out_val = payload.get("output")
+                    is_err = _codex_output_is_error(payload, out_val)
+                    chars = _content_chars(out_val) if not isinstance(out_val, str) else len(out_val)
+                    _record_tool_result(tname, is_err, chars)
+            elif etype == "event_msg":
+                ptype = payload.get("type")
+                if ptype == "turn_aborted":
+                    aborted = True
+                    prev_assistant_aborted = True
+                    last_stop_reason = "aborted"
+                elif ptype == "token_count":
+                    info = payload.get("info")
+                    if isinstance(info, dict):
+                        last_u = info.get("last_token_usage")
+                        tot_u = info.get("total_token_usage")
+                        if isinstance(last_u, dict):
+                            codex_last_usage_seen = True
+                            raw_in = int(last_u.get("input_tokens") or 0)
+                            cached_in = int(last_u.get("cached_input_tokens") or 0)
+                            # OpenAI input_tokens includes cached_input_tokens; store uncached delta in input_tokens
+                            # so total_prompt_tokens (= input + cache_read + cache_write) is not double-counted.
+                            input_tokens += max(0, raw_in - cached_in)
+                            output_tokens += int(last_u.get("output_tokens") or 0)
+                            cache_read_tokens += cached_in
+                            reasoning_tokens += int(last_u.get("reasoning_output_tokens") or 0)
+                        elif isinstance(tot_u, dict):
+                            raw_in = int(tot_u.get("input_tokens") or 0)
+                            cached_in = int(tot_u.get("cached_input_tokens") or 0)
+                            codex_fallback_total_usage = {
+                                "input": max(0, raw_in - cached_in),
+                                "output": int(tot_u.get("output_tokens") or 0),
+                                "cache_read": cached_in,
+                                "reasoning": int(tot_u.get("reasoning_output_tokens") or 0),
+                            }
+
+    if not codex_last_usage_seen and codex_fallback_total_usage is not None:
+        input_tokens = codex_fallback_total_usage["input"]
+        output_tokens = codex_fallback_total_usage["output"]
+        cache_read_tokens = codex_fallback_total_usage["cache_read"]
+        reasoning_tokens = codex_fallback_total_usage["reasoning"]
 
     if assistant_turns == 0 and user_turns == 0:
         return None, {}
@@ -329,6 +559,7 @@ def parse_session_file(path: Path) -> tuple[SessionSummary | None, dict[str, lis
     return (
         SessionSummary(
             date=session_date or "unknown",
+            runtime=runtime_name,
             is_private_tmp=is_private_tmp,
             user_turns=user_turns,
             assistant_turns=assistant_turns,
@@ -394,13 +625,14 @@ def analyze_directory(
     since: str | None = None,
     min_turns: int = 1,
     seed: int = 42,
+    fmt: str = "auto",
 ) -> dict[str, Any]:
     files = sorted(p for p in root.rglob("*.jsonl") if p.is_file())
     sessions: list[SessionSummary] = []
     agg_tools: dict[str, list[int]] = collections.defaultdict(lambda: [0, 0, 0])
 
     for path in files:
-        summary, tstats = parse_session_file(path)
+        summary, tstats = parse_session_file(path, fmt=fmt)
         if summary is None:
             continue
         if since and summary.date != "unknown" and summary.date < since:
@@ -508,15 +740,19 @@ def analyze_directory(
     st_mean, st_lo, st_hi = bootstrap_ci(stable_cache, seed=seed)
     dr_mean, dr_lo, dr_hi = bootstrap_ci(drifted_cache, seed=seed)
 
+    by_runtime = dict(sorted(collections.Counter(s.runtime for s in sessions).items()))
+
     return {
         "window": {
             "first_date": dates[0] if dates else "unknown",
             "last_date": dates[-1] if dates else "unknown",
             "since_filter": since,
             "min_turns": min_turns,
+            "format": fmt,
         },
         "sessions": {
             "total": n,
+            "by_runtime": by_runtime,
             "private_tmp": sum(1 for s in sessions if s.is_private_tmp),
             "private_tmp_share": round(sum(1 for s in sessions if s.is_private_tmp) / n, 4) if n else 0.0,
             "aborted": sum(1 for s in sessions if s.aborted),
@@ -595,11 +831,13 @@ def render_markdown(report: dict[str, Any]) -> str:
     fr = report["friction"]
     st = report["stratification"]
 
+    runtimes_str = ", ".join(f"{k}={v}" for k, v in s.get("by_runtime", {}).items()) or "none"
+
     lines = [
         "## Trace Telemetry Summary",
         "",
-        f"- **Window:** `{w['first_date']}` to `{w['last_date']}` (`min_turns={w['min_turns']}`)",
-        f"- **Sessions analyzed:** `{s['total']}` (completed `{s['completed']}` / `{s['completion_rate']*100:.1f}%`; named project `{s['total'] - s['private_tmp']}`, `--private-tmp--` `{s['private_tmp']}` / `{s['private_tmp_share']*100:.1f}%`)",
+        f"- **Window:** `{w['first_date']}` to `{w['last_date']}` (`min_turns={w['min_turns']}`, `format={w.get('format', 'auto')}`)",
+        f"- **Sessions analyzed:** `{s['total']}` (runtimes: `{runtimes_str}`; completed `{s['completed']}` / `{s['completion_rate']*100:.1f}%`; named project `{s['total'] - s['private_tmp']}`, `--private-tmp--` `{s['private_tmp']}` / `{s['private_tmp_share']*100:.1f}%`)",
         f"- **Assistant turns:** P50 `{s['turns_p50']}` / P90 `{s['turns_p90']}` / P99 `{s['turns_p99']}` (sessions > 5 MB: `{s['large_over_5mb']}`)",
         f"- **Context byte share (pooled):** tool outputs `{c['tool_result_char_share_pooled']*100:.1f}%`, assistant `{c['assistant_char_share']*100:.1f}%`, user `{c['user_char_share']*100:.1f}%` (per-session tool share `{c['tool_result_char_share_session_mean']*100:.1f}%`, 95% CI `[{c['tool_result_char_share_ci95'][0]*100:.1f}%, {c['tool_result_char_share_ci95'][1]*100:.1f}%]`)",
         f"- **Prompt cache hit rate (pooled):** `{t['pooled_cache_hit_rate']*100:.2f}%` across `{t['total_prompt_tokens']:,}` prompt tokens (`{t['prompt_tokens_per_completed_session']:,.1f}` prompt tokens / completed session; per-session mean `{t['session_cache_hit_mean']*100:.1f}%`, 95% CI `[{t['session_cache_hit_ci95'][0]*100:.1f}%, {t['session_cache_hit_ci95'][1]*100:.1f}%]`)",
@@ -649,6 +887,12 @@ def main() -> int:
     parser.add_argument("--since", type=str, default=None, help="include sessions on or after YYYY-MM-DD")
     parser.add_argument("--min-turns", type=int, default=1, help="minimum assistant turns per session")
     parser.add_argument("--seed", type=int, default=42, help="bootstrap PRNG seed")
+    parser.add_argument(
+        "--format",
+        choices=("auto", "omp", "claude", "codex"),
+        default="auto",
+        help="trace schema adapter (default: auto-detect per file)",
+    )
     parser.add_argument("--markdown", action="store_true", help="render Markdown report instead of JSON")
     args = parser.parse_args()
 
@@ -656,7 +900,9 @@ def main() -> int:
         print(f"error: sessions_dir not found: {args.sessions_dir}", file=sys.stderr)
         return 1
 
-    report = analyze_directory(args.sessions_dir, since=args.since, min_turns=args.min_turns, seed=args.seed)
+    report = analyze_directory(
+        args.sessions_dir, since=args.since, min_turns=args.min_turns, seed=args.seed, fmt=args.format
+    )
     if args.markdown:
         print(render_markdown(report))
     else:

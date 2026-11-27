@@ -203,6 +203,32 @@ class TestAnalyzeTraces(unittest.TestCase):
         self.assertIn("## Trace Telemetry Summary", md)
         self.assertIn("uncalibrated_heuristic", md)
 
+    def test_claude_code_adapter_parses_real_schema(self) -> None:
+        rep = analyze_traces.analyze_directory(ROOT / "examples" / "demo-sessions-cc", seed=42)
+        self.assertEqual(rep["sessions"]["total"], 1)
+        self.assertEqual(rep["sessions"]["by_runtime"], {"claude_code": 1})
+        self.assertEqual(rep["sessions"]["completed"], 1)
+        self.assertEqual(rep["tools"]["total_calls"], 2)
+        self.assertEqual(rep["tools"]["total_errors"], 1)
+        by_tool = {row["tool"]: row for row in rep["tools"]["by_tool"]}
+        self.assertEqual(by_tool["Bash"]["errors"], 1)
+        self.assertEqual(by_tool["Read"]["errors"], 0)
+        self.assertEqual(rep["friction"]["en_cue_turns"], 1)
+        self.assertGreater(rep["tokens_and_cache"]["total_prompt_tokens"], 0)
+
+    def test_codex_adapter_parses_real_schema_without_double_counting(self) -> None:
+        rep = analyze_traces.analyze_directory(ROOT / "examples" / "demo-sessions-codex", seed=42)
+        self.assertEqual(rep["sessions"]["total"], 1)
+        self.assertEqual(rep["sessions"]["by_runtime"], {"codex": 1})
+        self.assertEqual(rep["sessions"]["completed"], 1)
+        self.assertEqual(rep["tools"]["total_calls"], 2)
+        self.assertEqual(rep["tools"]["total_errors"], 1)
+        by_tool = {row["tool"]: row for row in rep["tools"]["by_tool"]}
+        self.assertEqual(by_tool["exec_command"]["errors"], 1)
+        self.assertEqual(by_tool["read_file"]["errors"], 0)
+        # Sum of last_token_usage across two steps = 2000 + 2500 = 4500 (not 2000 + 4500 cumulative)
+        self.assertEqual(rep["tokens_and_cache"]["total_prompt_tokens"], 4500)
+
     def test_repair_calibration_metrics(self) -> None:
         preds = [True] * 10 + [False] * 10
         labels = [True] * 9 + [False] + [False] * 9 + [True]

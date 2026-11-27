@@ -3,7 +3,7 @@
 Generated from `claims/`, `mapping/`, `experiments/`, and `incidents/` by `scripts/report.py`.
 Do not edit by hand. Run `python3 scripts/report.py --write`.
 
-**Coverage:** 27/27 changes mapped to a claim (100%).
+**Coverage:** 28/28 changes mapped to a claim (100%).
 
 ## Literature claims
 
@@ -98,6 +98,7 @@ Do not edit by hand. Run `python3 scripts/report.py --write`.
 | M-025 | live OMP 19.2.1 harness (config.yml, mcp.json, models.yml, extensions) | decision | D-001, D-002, D-006, D-008 |  |
 | M-026 | adapters/omp/prompt-assert.ts, scripts/payload_gate.py, scripts/analyze_traces.py, contracts/example-harness-contract.toml | decision | D-010, D-012, D-013 |  |
 | M-027 | claims/literature.toml, docs/prior-art.md, README.md | decision | D-012, D-013, LIT-017 |  |
+| M-028 | scripts/analyze_traces.py, examples/demo-sessions-cc/, examples/demo-sessions-codex/, tests/test_akribeia.py, docs/program.md, README.md | decision | D-012, D-013 |  |
 
 ## Experiments
 

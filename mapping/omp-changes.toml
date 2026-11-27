@@ -270,3 +270,13 @@ claims = ["D-012", "D-013", "LIT-017"]
 status = "decision"
 evidence = ""
 notes = "Clarifies Akribeia's Meta-Harness positioning without altering runtime behavior."
+
+[[change]]
+id = "M-028"
+date = "2026-11-27"
+target = "scripts/analyze_traces.py, examples/demo-sessions-cc/, examples/demo-sessions-codex/, tests/test_akribeia.py, docs/program.md, README.md"
+value = "Implement E4 read-only Claude Code and OpenAI Codex CLI JSONL adapters with auto-detection, --format selector, cumulative token-count guard, synthetic fixtures, and unit tests."
+claims = ["D-012", "D-013"]
+status = "decision"
+evidence = ""
+notes = "Zero runtime dependencies; privacy-safe aggregation verified against local Claude Code session files without emitting raw text or paths."

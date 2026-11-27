@@ -80,7 +80,7 @@ Status is either **done** (verifiable in this repository now), **in progress**, 
 | E1 | Unified CLI (`akribeia gate/trace/power/audit/report`) with zero runtime dependencies | `python3 scripts/akribeia.py --help` lists five subcommands; `tests/` covers dispatch | done |
 | E2 | `pyproject.toml` with a console script and no runtime dependencies | `pip install .` then `akribeia --help`; `dependencies = []` | done |
 | E3 | A failing fixture next to every passing one, runnable by hand | `examples/demo-payloads/anthropic_dead_extension.json` exits 1 with a blocked vacuous pass | done |
-| E4 | `[CC]` and Codex read-only adapters: parse their local JSONL logs into the analyzer's schema | adapter fixture parses a real-format log and yields non-zero sessions | planned |
+| E4 | `[CC]` and Codex read-only adapters: parse their local JSONL logs into the analyzer's schema | `examples/demo-sessions-cc` and `examples/demo-sessions-codex` parse non-zero sessions, tool surfaces, and token/cache counts via `analyze_traces.py` (`--format auto|claude|codex|omp`) | done |
 | E5 | Local read-only capture of the real wire payload for `[CC]` / Codex (stdlib `http.server` proxy) | a captured payload passes `payload_gate.py` on a good config and fails on a missing rule | planned |
 | E6 | Built-in detector pack: cache-prefix drift, vacuous negative assertion, **MCP tool-schema budget gate**, skill lazy-load check | each detector has one fixture that fails and one that passes | in progress (cache-prefix drift, vacuous negative assertion, and MCP tool-schema budget gate done with `anthropic_mcp_bloat.json`; skill lazy-load check remaining) |
 
